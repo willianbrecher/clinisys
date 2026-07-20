@@ -1,0 +1,22 @@
+# .NET
+backend/src/**/bin/
+backend/src/**/obj/
+backend/src/**/*.user
+*.suo
+.vs/
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# Environment secrets
+.env
+*.env.local
+
+# Docker volumes
+postgres-data/
+
+# OS
+.DS_Store
+Thumbs.db
