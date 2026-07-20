@@ -4,5 +4,158 @@
         <name>CliniSys.Domain</name>
     </assembly>
     <members>
+        <member name="T:CliniSys.Domain.Entities.ApplicationUser">
+            <summary>A system user who can log in. Backed by ASP.NET Core Identity.</summary>
+        </member>
+        <member name="P:CliniSys.Domain.Entities.ApplicationUser.FullName">
+            <summary>Full display name.</summary>
+        </member>
+        <member name="P:CliniSys.Domain.Entities.ApplicationUser.Role">
+            <summary>Role controlling access within the system.</summary>
+        </member>
+        <member name="P:CliniSys.Domain.Entities.ApplicationUser.ProfilePictureBase64">
+            <summary>Optional profile picture as a base64 data URI (e.g. <c>data:image/png;base64,...</c>).</summary>
+        </member>
+        <member name="P:CliniSys.Domain.Entities.ApplicationUser.ThemePreference">
+            <summary>Preferred colour theme. Defaults to <see cref="F:CliniSys.Domain.Enums.ThemePreference.System"/>.</summary>
+        </member>
+        <member name="P:CliniSys.Domain.Entities.ApplicationUser.LanguagePreference">
+            <summary>BCP-47 language tag. Supported: <c>en-US</c>, <c>pt-BR</c>, <c>es-ES</c>. Defaults to <c>en-US</c>.</summary>
+        </member>
+        <member name="T:CliniSys.Domain.Entities.Appointment">
+            <summary>An appointment scheduled between a patient and a doctor.</summary>
+        </member>
+        <member name="P:CliniSys.Domain.Entities.Appointment.Id">
+            <summary>Primary key.</summary>
+        </member>
+        <member name="P:CliniSys.Domain.Entities.Appointment.PatientId">
+            <summary>FK to the patient.</summary>
+        </member>
+        <member name="P:CliniSys.Domain.Entities.Appointment.Patient">
+            <summary>Navigation property to the patient.</summary>
+        </member>
+        <member name="P:CliniSys.Domain.Entities.Appointment.DoctorId">
+            <summary>FK to the doctor.</summary>
+        </member>
+        <member name="P:CliniSys.Domain.Entities.Appointment.Doctor">
+            <summary>Navigation property to the doctor.</summary>
+        </member>
+        <member name="P:CliniSys.Domain.Entities.Appointment.StartsAt">
+            <summary>UTC date and time the appointment starts.</summary>
+        </member>
+        <member name="P:CliniSys.Domain.Entities.Appointment.DurationMinutes">
+            <summary>Duration in minutes.</summary>
+        </member>
+        <member name="P:CliniSys.Domain.Entities.Appointment.Status">
+            <summary>Current lifecycle status.</summary>
+        </member>
+        <member name="P:CliniSys.Domain.Entities.Appointment.Notes">
+            <summary>Optional appointment notes.</summary>
+        </member>
+        <member name="P:CliniSys.Domain.Entities.Appointment.CreatedAt">
+            <summary>UTC timestamp when created.</summary>
+        </member>
+        <member name="T:CliniSys.Domain.Entities.ClinicSettings">
+            <summary>Singleton row storing clinic-wide configuration.</summary>
+        </member>
+        <member name="P:CliniSys.Domain.Entities.ClinicSettings.Id">
+            <summary>Primary key (only one row exists).</summary>
+        </member>
+        <member name="P:CliniSys.Domain.Entities.ClinicSettings.OpenTime">
+            <summary>Time the clinic opens each working day.</summary>
+        </member>
+        <member name="P:CliniSys.Domain.Entities.ClinicSettings.CloseTime">
+            <summary>Time the clinic closes each working day.</summary>
+        </member>
+        <member name="P:CliniSys.Domain.Entities.ClinicSettings.OpenDays">
+            <summary>Comma-separated weekday numbers, 0=Sun…6=Sat (e.g. <c>"1,2,3,4,5"</c>).</summary>
+        </member>
+        <member name="P:CliniSys.Domain.Entities.ClinicSettings.LogoBase64">
+            <summary>Optional clinic logo as a base64 data URI. <see langword="null"/> means no logo.</summary>
+        </member>
+        <member name="T:CliniSys.Domain.Entities.Doctor">
+            <summary>Doctor profile linked 1:1 to an <see cref="T:CliniSys.Domain.Entities.ApplicationUser"/> with role Doctor.</summary>
+        </member>
+        <member name="P:CliniSys.Domain.Entities.Doctor.Id">
+            <summary>Primary key.</summary>
+        </member>
+        <member name="P:CliniSys.Domain.Entities.Doctor.UserId">
+            <summary>FK to the associated user.</summary>
+        </member>
+        <member name="P:CliniSys.Domain.Entities.Doctor.User">
+            <summary>Navigation property to the user.</summary>
+        </member>
+        <member name="P:CliniSys.Domain.Entities.Doctor.Specialty">
+            <summary>Free-form medical specialty (e.g. "Cardiology").</summary>
+        </member>
+        <member name="P:CliniSys.Domain.Entities.Doctor.IsActive">
+            <summary>False when soft-deleted.</summary>
+        </member>
+        <member name="T:CliniSys.Domain.Entities.Patient">
+            <summary>A clinic patient. Patients do not have login accounts.</summary>
+        </member>
+        <member name="P:CliniSys.Domain.Entities.Patient.Id">
+            <summary>Primary key.</summary>
+        </member>
+        <member name="P:CliniSys.Domain.Entities.Patient.FullName">
+            <summary>Full name.</summary>
+        </member>
+        <member name="P:CliniSys.Domain.Entities.Patient.DateOfBirth">
+            <summary>Date of birth.</summary>
+        </member>
+        <member name="P:CliniSys.Domain.Entities.Patient.Phone">
+            <summary>Contact phone number.</summary>
+        </member>
+        <member name="P:CliniSys.Domain.Entities.Patient.Email">
+            <summary>Optional contact email.</summary>
+        </member>
+        <member name="P:CliniSys.Domain.Entities.Patient.Notes">
+            <summary>Optional notes (insurance, medical, etc.).</summary>
+        </member>
+        <member name="P:CliniSys.Domain.Entities.Patient.IsActive">
+            <summary>False when soft-deleted.</summary>
+        </member>
+        <member name="T:CliniSys.Domain.Enums.AppointmentStatus">
+            <summary>Lifecycle states for an appointment.</summary>
+        </member>
+        <member name="F:CliniSys.Domain.Enums.AppointmentStatus.Scheduled">
+            <summary>Booked but not yet confirmed.</summary>
+        </member>
+        <member name="F:CliniSys.Domain.Enums.AppointmentStatus.Confirmed">
+            <summary>Confirmed by doctor or staff.</summary>
+        </member>
+        <member name="F:CliniSys.Domain.Enums.AppointmentStatus.Completed">
+            <summary>Appointment has taken place.</summary>
+        </member>
+        <member name="F:CliniSys.Domain.Enums.AppointmentStatus.Cancelled">
+            <summary>Cancelled before the appointment.</summary>
+        </member>
+        <member name="F:CliniSys.Domain.Enums.AppointmentStatus.NoShow">
+            <summary>Patient did not show up.</summary>
+        </member>
+        <member name="T:CliniSys.Domain.Enums.Role">
+            <summary>User roles in the clinic system.</summary>
+        </member>
+        <member name="F:CliniSys.Domain.Enums.Role.Admin">
+            <summary>System administrator with full access.</summary>
+        </member>
+        <member name="F:CliniSys.Domain.Enums.Role.Staff">
+            <summary>Front-desk staff for scheduling and patient management.</summary>
+        </member>
+        <member name="F:CliniSys.Domain.Enums.Role.Doctor">
+            <summary>A medical doctor linked to a Doctor profile.</summary>
+        </member>
+        <member name="T:CliniSys.Domain.Enums.ThemePreference">
+            <summary>UI theme preference for a user.</summary>
+        </member>
+        <member name="F:CliniSys.Domain.Enums.ThemePreference.Light">
+            <summary>Always use light mode.</summary>
+        </member>
+        <member name="F:CliniSys.Domain.Enums.ThemePreference.Dark">
+            <summary>Always use dark mode.</summary>
+        </member>
+        <member name="F:CliniSys.Domain.Enums.ThemePreference.System">
+            <summary>Follow the operating system preference.</summary>
+        </member>
     </members>
 </doc>
