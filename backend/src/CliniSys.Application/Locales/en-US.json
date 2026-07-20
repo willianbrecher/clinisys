@@ -1,0 +1,15 @@
+{
+  "validation": {
+    "required": "This field is required.",
+    "invalidEmail": "Invalid email address.",
+    "minLength": "Must be at least {0} characters.",
+    "maxLength": "Must be at most {0} characters.",
+    "invalidDate": "Invalid date.",
+    "pageSizeExceeded": "PageSize cannot exceed 100.",
+    "invalidImage": "Must be a valid base64 image data URI (max 512 KB).",
+    "invalidLanguage": "Language must be one of: en-US, pt-BR, es-ES.",
+    "passwordMismatch": "New password must differ from the current password.",
+    "appointmentPast": "Appointment start time must be in the future.",
+    "invalidDuration": "Duration must be between 5 and 480 minutes."
+  }
+}

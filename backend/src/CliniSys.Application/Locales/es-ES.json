@@ -1,0 +1,15 @@
+{
+  "validation": {
+    "required": "Este campo es obligatorio.",
+    "invalidEmail": "Dirección de correo electrónico inválida.",
+    "minLength": "Debe tener al menos {0} caracteres.",
+    "maxLength": "Debe tener como máximo {0} caracteres.",
+    "invalidDate": "Fecha inválida.",
+    "pageSizeExceeded": "PageSize no puede superar 100.",
+    "invalidImage": "Debe ser un URI de datos de imagen base64 válido (máx. 512 KB).",
+    "invalidLanguage": "El idioma debe ser uno de: en-US, pt-BR, es-ES.",
+    "passwordMismatch": "La nueva contraseña debe ser diferente de la actual.",
+    "appointmentPast": "La hora de inicio de la cita debe ser en el futuro.",
+    "invalidDuration": "La duración debe estar entre 5 y 480 minutos."
+  }
+}
