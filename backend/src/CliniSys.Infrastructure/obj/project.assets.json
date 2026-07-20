@@ -2010,7 +2010,10 @@
         },
         "runtime": {
           "bin/placeholder/CliniSys.Domain.dll": {}
-        }
+        },
+        "frameworkReferences": [
+          "Microsoft.AspNetCore.App"
+        ]
       }
     }
   },
