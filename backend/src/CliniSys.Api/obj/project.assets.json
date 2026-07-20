@@ -1551,7 +1551,10 @@
         },
         "runtime": {
           "bin/placeholder/CliniSys.Domain.dll": {}
-        }
+        },
+        "frameworkReferences": [
+          "Microsoft.AspNetCore.App"
+        ]
       },
       "CliniSys.Infrastructure/1.0.0": {
         "type": "project",
