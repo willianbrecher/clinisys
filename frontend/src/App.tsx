@@ -9,6 +9,7 @@ import { DoctorsPage } from "@/features/doctors/DoctorsPage";
 import { DoctorFormContent } from "@/features/doctors/DoctorFormContent";
 import { AppointmentsPage } from "@/features/appointments/AppointmentsPage";
 import { UsersPage } from "@/features/users/UsersPage";
+import { UserFormContent } from "@/features/users/UserFormContent";
 import { SettingsPage } from "@/features/settings/SettingsPage";
 import { AccountPage } from "@/features/account/AccountPage";
 
@@ -34,7 +35,10 @@ export default function App() {
 
         <Route path="appointments" element={<AppointmentsPage />} />
 
-        <Route path="users" element={<ProtectedRoute allowedRoles={["Admin"]}><UsersPage /></ProtectedRoute>} />
+        <Route path="users"
+          element={<ProtectedRoute allowedRoles={["Admin"]}><UsersPage /></ProtectedRoute>}>
+          <Route path="new" element={<UserFormContent />} />
+        </Route>
         <Route path="settings" element={<ProtectedRoute allowedRoles={["Admin"]}><SettingsPage /></ProtectedRoute>} />
         <Route path="account" element={<AccountPage />} />
 

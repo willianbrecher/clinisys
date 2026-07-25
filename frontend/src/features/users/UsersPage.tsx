@@ -1,40 +1,30 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
+import { useNavigate, useOutlet, Outlet } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { getUsers, createUser, deactivateUser, resetPassword } from "@/api/users";
-import { UserForm } from "./UserForm";
+import { getUsers, deactivateUser, resetPassword } from "@/api/users";
 import type { UserModel, PagedResult } from "@/api/types";
-import type { CreateUserFormData } from "./user.schema";
 
 export function UsersPage() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
+  const outlet = useOutlet();
   const [data, setData] = useState<PagedResult<UserModel> | null>(null);
-  const [open, setOpen] = useState(false);
   const [resetTarget, setResetTarget] = useState<UserModel | null>(null);
   const [newPw, setNewPw] = useState("");
   const [page, setPage] = useState(1);
 
-  const load = () => getUsers({ page, pageSize: 20 }).then(setData).catch(() => {});
-  useEffect(() => { load(); }, [page]); // eslint-disable-line react-hooks/exhaustive-deps
+  const load = useCallback(() => {
+    getUsers({ page, pageSize: 20 }).then(setData).catch(() => {});
+  }, [page]);
 
-  const handleCreate = async (formData: CreateUserFormData) => {
-    try {
-      await createUser({
-        email: formData.email,
-        fullName: formData.fullName,
-        password: formData.password,
-        role: formData.role as "Admin" | "Staff" | "Doctor",
-        specialty: formData.specialty,
-      });
-      toast.success("User created.");
-      setOpen(false);
-      load();
-    } catch { toast.error("Failed to create user."); }
-  };
+  useEffect(() => { load(); }, [load]);
+
+  const close = () => navigate("/users");
 
   const handleDeactivate = async (id: string) => {
     try { await deactivateUser(id); toast.success("User deactivated."); load(); }
@@ -43,23 +33,21 @@ export function UsersPage() {
 
   const handleResetPw = async () => {
     if (!resetTarget || !newPw) return;
-    try { await resetPassword(resetTarget.id, newPw); toast.success("Password reset."); setResetTarget(null); setNewPw(""); }
-    catch { toast.error("Failed to reset password."); }
+    try {
+      await resetPassword(resetTarget.id, newPw);
+      toast.success("Password reset.");
+      setResetTarget(null);
+      setNewPw("");
+    } catch { toast.error("Failed to reset password."); }
   };
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">{t("users.title")}</h1>
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button size="sm"><Plus className="mr-1 h-4 w-4" />{t("users.new")}</Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-md">
-            <DialogHeader><DialogTitle>{t("users.new")}</DialogTitle></DialogHeader>
-            <UserForm onSubmit={handleCreate} onCancel={() => setOpen(false)} />
-          </DialogContent>
-        </Dialog>
+        <Button size="sm" onClick={() => navigate("/users/new")}>
+          <Plus className="mr-1 h-4 w-4" />{t("users.new")}
+        </Button>
       </div>
 
       <div className="hidden md:block rounded-md border overflow-hidden">
@@ -90,7 +78,6 @@ export function UsersPage() {
         </Table>
       </div>
 
-      {/* Mobile cards */}
       <div className="flex flex-col gap-2 md:hidden">
         {data?.items.map((u) => (
           <div key={u.id} className="rounded-md border p-3 space-y-1">
@@ -104,8 +91,16 @@ export function UsersPage() {
         ))}
       </div>
 
-      {/* Reset password dialog */}
-      <Dialog open={!!resetTarget} onOpenChange={(o) => { if (!o) { setResetTarget(null); setNewPw(""); }}}>
+      {data && data.totalPages > 1 && (
+        <div className="flex items-center justify-center gap-2">
+          <Button variant="outline" size="sm" disabled={page === 1} onClick={() => setPage(p => p - 1)}>{t("common.previous")}</Button>
+          <span className="text-sm">{t("common.page")} {page} {t("common.of")} {data.totalPages}</span>
+          <Button variant="outline" size="sm" disabled={page === data.totalPages} onClick={() => setPage(p => p + 1)}>{t("common.next")}</Button>
+        </div>
+      )}
+
+      {/* Reset password dialog — stays state-driven, no deep-link value */}
+      <Dialog open={!!resetTarget} onOpenChange={(o) => { if (!o) { setResetTarget(null); setNewPw(""); } }}>
         <DialogContent className="max-w-sm">
           <DialogHeader><DialogTitle>{t("users.resetPassword")}</DialogTitle></DialogHeader>
           <div className="flex flex-col gap-3">
@@ -120,13 +115,12 @@ export function UsersPage() {
         </DialogContent>
       </Dialog>
 
-      {data && data.totalPages > 1 && (
-        <div className="flex items-center justify-center gap-2">
-          <Button variant="outline" size="sm" disabled={page === 1} onClick={() => setPage(p => p - 1)}>{t("common.previous")}</Button>
-          <span className="text-sm">{t("common.page")} {page} {t("common.of")} {data.totalPages}</span>
-          <Button variant="outline" size="sm" disabled={page === data.totalPages} onClick={() => setPage(p => p + 1)}>{t("common.next")}</Button>
-        </div>
-      )}
+      {/* New user modal — route-driven */}
+      <Dialog open={!!outlet} onOpenChange={(open) => { if (!open) close(); }}>
+        <DialogContent className="max-w-md">
+          <Outlet context={{ onClose: close, onSaved: load }} />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
