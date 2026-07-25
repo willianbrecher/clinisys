@@ -15,7 +15,8 @@
     "of": "de",
     "previous": "Anterior",
     "next": "Siguiente",
-    "select": "Seleccionar..."
+    "select": "Seleccionar...",
+    "view": "Ver"
   },
   "nav": {
     "dashboard": "Panel",

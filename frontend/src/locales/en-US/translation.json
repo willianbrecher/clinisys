@@ -15,7 +15,8 @@
     "of": "of",
     "previous": "Previous",
     "next": "Next",
-    "select": "Select..."
+    "select": "Select...",
+    "view": "View"
   },
   "nav": {
     "dashboard": "Dashboard",
