@@ -6,7 +6,7 @@ import { DashboardPage } from "@/features/dashboard/DashboardPage";
 import { PatientsPage } from "@/features/patients/PatientsPage";
 import { PatientFormContent } from "@/features/patients/PatientFormContent";
 import { DoctorsPage } from "@/features/doctors/DoctorsPage";
-import { DoctorForm } from "@/features/doctors/DoctorForm";
+import { DoctorFormContent } from "@/features/doctors/DoctorFormContent";
 import { AppointmentsPage } from "@/features/appointments/AppointmentsPage";
 import { UsersPage } from "@/features/users/UsersPage";
 import { SettingsPage } from "@/features/settings/SettingsPage";
@@ -26,8 +26,11 @@ export default function App() {
           <Route path=":id/edit" element={<PatientFormContent />} />
         </Route>
 
-        <Route path="doctors" element={<ProtectedRoute allowedRoles={["Admin","Staff"]}><DoctorsPage /></ProtectedRoute>} />
-        <Route path="doctors/:id" element={<ProtectedRoute allowedRoles={["Admin","Staff"]}><DoctorForm /></ProtectedRoute>} />
+        <Route path="doctors"
+          element={<ProtectedRoute allowedRoles={["Admin","Staff"]}><DoctorsPage /></ProtectedRoute>}>
+          <Route path=":id/edit"   element={<DoctorFormContent />} />
+          <Route path=":id/detail" element={<DoctorFormContent />} />
+        </Route>
 
         <Route path="appointments" element={<AppointmentsPage />} />
 
