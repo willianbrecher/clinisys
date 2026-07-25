@@ -8,6 +8,7 @@ import { PatientFormContent } from "@/features/patients/PatientFormContent";
 import { DoctorsPage } from "@/features/doctors/DoctorsPage";
 import { DoctorFormContent } from "@/features/doctors/DoctorFormContent";
 import { AppointmentsPage } from "@/features/appointments/AppointmentsPage";
+import { AppointmentFormContent } from "@/features/appointments/AppointmentFormContent";
 import { UsersPage } from "@/features/users/UsersPage";
 import { UserFormContent } from "@/features/users/UserFormContent";
 import { SettingsPage } from "@/features/settings/SettingsPage";
@@ -33,7 +34,11 @@ export default function App() {
           <Route path=":id/detail" element={<DoctorFormContent />} />
         </Route>
 
-        <Route path="appointments" element={<AppointmentsPage />} />
+        <Route path="appointments" element={<AppointmentsPage />}>
+          <Route path="new"        element={<AppointmentFormContent />} />
+          <Route path=":id/edit"   element={<AppointmentFormContent />} />
+          <Route path=":id/detail" element={<AppointmentFormContent />} />
+        </Route>
 
         <Route path="users"
           element={<ProtectedRoute allowedRoles={["Admin"]}><UsersPage /></ProtectedRoute>}>

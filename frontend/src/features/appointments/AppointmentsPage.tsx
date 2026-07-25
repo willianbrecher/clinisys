@@ -1,15 +1,16 @@
 import { useEffect, useState, useCallback } from "react";
+import { useNavigate, useOutlet, Outlet } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Plus, List, CalendarDays } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { getAppointments } from "@/api/appointments";
 import { getClinicSettings } from "@/api/clinicSettings";
-import { AppointmentModal } from "./AppointmentModal";
 import type { AppointmentModel, ClinicSettingsModel } from "@/api/types";
 import { useAuth } from "@/auth/AuthContext";
 
@@ -25,15 +26,15 @@ const STATUS_COLORS: Record<string, string> = {
 
 export function AppointmentsPage() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
+  const outlet = useOutlet();
   const { role, doctorId } = useAuth();
   const [tab, setTab] = useState<Tab>("calendar");
   const [data, setData] = useState<AppointmentModel[]>([]);
   const [listPage, setListPage] = useState(1);
   const [listTotal, setListTotal] = useState(0);
   const [settings, setSettings] = useState<ClinicSettingsModel | null>(null);
-  const [selected, setSelected] = useState<AppointmentModel | null>(null);
-  const [defaultStartsAt, setDefaultStartsAt] = useState<string | undefined>();
-  const [modalOpen, setModalOpen] = useState(false);
+  const [calendarKey, setCalendarKey] = useState(0);
 
   useEffect(() => {
     getClinicSettings().then(setSettings).catch(() => {});
@@ -49,23 +50,22 @@ export function AppointmentsPage() {
   const loadCalendar = useCallback((start: string, end: string) => {
     return getAppointments({
       doctorId: role === "Doctor" ? doctorId : undefined,
-      startDate: start, endDate: end,
-      pageSize: 200,
+      startDate: start, endDate: end, pageSize: 200,
     }).then((r) => r.items).catch(() => [] as AppointmentModel[]);
   }, [role, doctorId]);
 
   useEffect(() => { if (tab === "list") loadList(); }, [tab, loadList]);
 
-  const openNew = (startsAt?: string) => {
-    setSelected(null);
-    setDefaultStartsAt(startsAt);
-    setModalOpen(true);
+  const close = () => navigate("/appointments");
+
+  const onSaved = () => {
+    if (tab === "list") loadList();
+    else setCalendarKey((k) => k + 1);
   };
 
-  const openEdit = (a: AppointmentModel) => {
-    setSelected(a);
-    setDefaultStartsAt(undefined);
-    setModalOpen(true);
+  const openAppointment = (a: AppointmentModel) => {
+    if (role === "Doctor") navigate(`/appointments/${a.id}/detail`, { state: { appointment: a } });
+    else navigate(`/appointments/${a.id}/edit`, { state: { appointment: a } });
   };
 
   const openDays = settings?.openDays
@@ -86,7 +86,9 @@ export function AppointmentsPage() {
           <Button variant={tab === "calendar" ? "default" : "outline"} size="sm" onClick={() => setTab("calendar")}>
             <CalendarDays className="mr-1 h-4 w-4" />{t("appointments.calendarView")}
           </Button>
-          <Button size="sm" onClick={() => openNew()}><Plus className="mr-1 h-4 w-4" />{t("appointments.new")}</Button>
+          <Button size="sm" onClick={() => navigate("/appointments/new")}>
+            <Plus className="mr-1 h-4 w-4" />{t("appointments.new")}
+          </Button>
         </div>
       </div>
 
@@ -115,7 +117,9 @@ export function AppointmentsPage() {
                       </span>
                     </TableCell>
                     <TableCell>
-                      <Button size="sm" variant="outline" onClick={() => openEdit(a)}>{t("common.edit")}</Button>
+                      <Button size="sm" variant="outline" onClick={() => openAppointment(a)}>
+                        {role === "Doctor" ? t("common.view") : t("common.edit")}
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -135,7 +139,9 @@ export function AppointmentsPage() {
                 </div>
                 <p className="text-sm text-muted-foreground">{a.doctorName}</p>
                 <p className="text-sm">{new Intl.DateTimeFormat(undefined, { dateStyle: "short", timeStyle: "short" }).format(new Date(a.startsAt))}</p>
-                <Button size="sm" variant="outline" className="w-full" onClick={() => openEdit(a)}>{t("common.edit")}</Button>
+                <Button size="sm" variant="outline" className="w-full" onClick={() => openAppointment(a)}>
+                  {role === "Doctor" ? t("common.view") : t("common.edit")}
+                </Button>
               </div>
             ))}
             {data.length === 0 && <p className="text-center text-muted-foreground py-8">{t("common.noResults")}</p>}
@@ -154,6 +160,7 @@ export function AppointmentsPage() {
       {tab === "calendar" && (
         <div className="[&_.fc]:text-sm">
           <FullCalendar
+            key={calendarKey}
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin] as any[]}
             initialView="timeGridWeek"
@@ -167,11 +174,12 @@ export function AppointmentsPage() {
             hiddenDays={[0, 1, 2, 3, 4, 5, 6].filter((d) => !openDays.includes(d))}
             selectable
             selectConstraint={{ daysOfWeek: openDays, startTime: slotMinTime, endTime: slotMaxTime }}
-            dateClick={(info: { dateStr: string }) => openNew(info.dateStr)}
+            dateClick={(info: { dateStr: string }) =>
+              navigate("/appointments/new", { state: { defaultStartsAt: info.dateStr } })
+            }
             eventClick={(info) => {
-              const id = info.event.id;
-              const appt = data.find((a) => a.id === id);
-              if (appt) openEdit(appt);
+              const appt = data.find((a) => a.id === info.event.id);
+              if (appt) openAppointment(appt);
             }}
             events={async (info, successCb) => {
               const items = await loadCalendar(info.startStr, info.endStr);
@@ -190,13 +198,11 @@ export function AppointmentsPage() {
         </div>
       )}
 
-      <AppointmentModal
-        open={modalOpen}
-        onClose={() => setModalOpen(false)}
-        onSaved={() => { if (tab === "list") loadList(); }}
-        appointment={selected ?? undefined}
-        defaultStartsAt={defaultStartsAt}
-      />
+      <Dialog open={!!outlet} onOpenChange={(open) => { if (!open) close(); }}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <Outlet context={{ onClose: close, onSaved }} />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
