@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams, useOutletContext } from "react-router-dom";
 import { useForm, type Resolver } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useTranslation } from "react-i18next";
@@ -8,13 +8,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { getPatientById, createPatient, updatePatient } from "@/api/patients";
 import { patientSchema, type PatientFormData } from "./patient.schema";
+import type { ModalContext } from "@/types/modal";
 
-export function PatientForm() {
+export function PatientFormContent() {
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
+  const { onClose, onSaved } = useOutletContext<ModalContext>();
   const isEdit = !!id;
 
   const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<PatientFormData>({
@@ -39,17 +41,18 @@ export function PatientForm() {
         await createPatient(data);
         toast.success("Patient created.");
       }
-      navigate("/patients");
+      onSaved();
+      onClose();
     } catch {
       toast.error("Failed to save patient.");
     }
   };
 
   return (
-    <div className="max-w-2xl space-y-4">
-      <h1 className="text-2xl font-semibold">
-        {isEdit ? t("common.edit") : t("patients.new")} {t("patients.title").toLowerCase()}
-      </h1>
+    <>
+      <DialogHeader>
+        <DialogTitle>{isEdit ? t("common.edit") : t("patients.new")}</DialogTitle>
+      </DialogHeader>
 
       <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4 sm:grid-cols-2">
         <div className="flex flex-col gap-1.5 sm:col-span-2">
@@ -85,11 +88,11 @@ export function PatientForm() {
           <Button type="submit" disabled={isSubmitting}>
             {isSubmitting ? t("common.loading") : t("common.save")}
           </Button>
-          <Button type="button" variant="outline" onClick={() => navigate("/patients")}>
+          <Button type="button" variant="outline" onClick={onClose}>
             {t("common.cancel")}
           </Button>
         </div>
       </form>
-    </div>
+    </>
   );
 }

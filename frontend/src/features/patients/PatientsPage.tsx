@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useOutlet, Outlet } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { Plus, Search } from "lucide-react";
@@ -8,12 +8,14 @@ import { Input } from "@/components/ui/input";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { getPatients, deactivatePatient } from "@/api/patients";
 import type { PatientModel, PagedResult } from "@/api/types";
 
 export function PatientsPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const outlet = useOutlet();
   const [data, setData] = useState<PagedResult<PatientModel> | null>(null);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
@@ -25,6 +27,8 @@ export function PatientsPage() {
   }, [search, page]);
 
   useEffect(() => { load(); }, [load]);
+
+  const close = () => navigate("/patients");
 
   const handleDeactivate = async (id: string) => {
     try {
@@ -51,7 +55,6 @@ export function PatientsPage() {
           value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} />
       </div>
 
-      {/* Desktop table */}
       <div className="hidden md:block rounded-md border overflow-hidden">
         <Table>
           <TableHeader>
@@ -70,7 +73,7 @@ export function PatientsPage() {
                 <TableCell>{p.email ?? "—"}</TableCell>
                 <TableCell>
                   <div className="flex gap-2">
-                    <Button size="sm" variant="outline" onClick={() => navigate(`/patients/${p.id}`)}>
+                    <Button size="sm" variant="outline" onClick={() => navigate(`/patients/${p.id}/edit`)}>
                       {t("common.edit")}
                     </Button>
                     <Button size="sm" variant="destructive" onClick={() => handleDeactivate(p.id)}>
@@ -87,7 +90,6 @@ export function PatientsPage() {
         </Table>
       </div>
 
-      {/* Mobile cards */}
       <div className="flex flex-col gap-2 md:hidden">
         {data?.items.map((p) => (
           <div key={p.id} className="rounded-md border p-3 space-y-1">
@@ -95,7 +97,7 @@ export function PatientsPage() {
             <p className="text-sm text-muted-foreground">{p.phone}</p>
             {p.email && <p className="text-sm text-muted-foreground">{p.email}</p>}
             <div className="flex gap-2 pt-1">
-              <Button size="sm" variant="outline" className="flex-1" onClick={() => navigate(`/patients/${p.id}`)}>
+              <Button size="sm" variant="outline" className="flex-1" onClick={() => navigate(`/patients/${p.id}/edit`)}>
                 {t("common.edit")}
               </Button>
               <Button size="sm" variant="destructive" className="flex-1" onClick={() => handleDeactivate(p.id)}>
@@ -118,6 +120,12 @@ export function PatientsPage() {
           </Button>
         </div>
       )}
+
+      <Dialog open={!!outlet} onOpenChange={(open) => { if (!open) close(); }}>
+        <DialogContent className="max-w-lg">
+          <Outlet context={{ onClose: close, onSaved: load }} />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

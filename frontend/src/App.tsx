@@ -4,7 +4,7 @@ import { ProtectedRoute } from "@/auth/ProtectedRoute";
 import { LoginPage } from "@/features/auth/LoginPage";
 import { DashboardPage } from "@/features/dashboard/DashboardPage";
 import { PatientsPage } from "@/features/patients/PatientsPage";
-import { PatientForm } from "@/features/patients/PatientForm";
+import { PatientFormContent } from "@/features/patients/PatientFormContent";
 import { DoctorsPage } from "@/features/doctors/DoctorsPage";
 import { DoctorForm } from "@/features/doctors/DoctorForm";
 import { AppointmentsPage } from "@/features/appointments/AppointmentsPage";
@@ -20,9 +20,11 @@ export default function App() {
       <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
         <Route index element={<DashboardPage />} />
 
-        <Route path="patients" element={<ProtectedRoute allowedRoles={["Admin","Staff"]}><PatientsPage /></ProtectedRoute>} />
-        <Route path="patients/new" element={<ProtectedRoute allowedRoles={["Admin","Staff"]}><PatientForm /></ProtectedRoute>} />
-        <Route path="patients/:id" element={<ProtectedRoute allowedRoles={["Admin","Staff"]}><PatientForm /></ProtectedRoute>} />
+        <Route path="patients"
+          element={<ProtectedRoute allowedRoles={["Admin","Staff"]}><PatientsPage /></ProtectedRoute>}>
+          <Route path="new"      element={<PatientFormContent />} />
+          <Route path=":id/edit" element={<PatientFormContent />} />
+        </Route>
 
         <Route path="doctors" element={<ProtectedRoute allowedRoles={["Admin","Staff"]}><DoctorsPage /></ProtectedRoute>} />
         <Route path="doctors/:id" element={<ProtectedRoute allowedRoles={["Admin","Staff"]}><DoctorForm /></ProtectedRoute>} />
