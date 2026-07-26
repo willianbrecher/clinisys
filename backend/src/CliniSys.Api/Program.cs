@@ -10,8 +10,10 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
     ?? throw new InvalidOperationException("Connection string 'DefaultConnection' is missing.");
 
 builder.Services.AddApplication();
-builder.Services.AddInfrastructure(connectionString);
-builder.Services.AddControllers();
+builder.Services.AddInfrastructure(connectionString, builder.Configuration);
+builder.Services.AddControllers()
+    .AddJsonOptions(o =>
+        o.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter()));
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
@@ -58,22 +60,8 @@ using (var scope = app.Services.CreateScope())
     var db = scope.ServiceProvider.GetRequiredService<CliniSys.Infrastructure.Persistence.AppDbContext>();
     await db.Database.MigrateAsync();
 
-    var userManager = scope.ServiceProvider
-        .GetRequiredService<Microsoft.AspNetCore.Identity.UserManager<CliniSys.Domain.Entities.ApplicationUser>>();
-
-    const string adminEmail = "admin@clinisys.local";
-    if (await userManager.FindByNameAsync(adminEmail) is null)
-    {
-        var admin = new CliniSys.Domain.Entities.ApplicationUser
-        {
-            Id       = Guid.NewGuid(),
-            UserName = adminEmail,
-            Email    = adminEmail,
-            FullName = "System Administrator",
-            Role     = CliniSys.Domain.Enums.Role.Admin
-        };
-        await userManager.CreateAsync(admin, "Admin@12345");
-    }
+    var seeder = scope.ServiceProvider.GetRequiredService<CliniSys.Infrastructure.Persistence.Seeds.DatabaseSeeder>();
+    await seeder.SeedAsync();
 }
 
 app.Run();

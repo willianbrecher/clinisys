@@ -5,9 +5,13 @@ using CliniSys.Infrastructure.Identity;
 using CliniSys.Infrastructure.Localization;
 using CliniSys.Infrastructure.Persistence;
 using CliniSys.Infrastructure.Persistence.Repositories;
+using CliniSys.Infrastructure.Persistence.Seeds;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using OpenIddict.Validation.AspNetCore;
 
 namespace CliniSys.Infrastructure;
 
@@ -18,12 +22,11 @@ public static class DependencyInjection
     /// <param name="services">The service collection.</param>
     /// <param name="connectionString">PostgreSQL connection string.</param>
     /// <returns>The service collection for chaining.</returns>
-    public static IServiceCollection AddInfrastructure(this IServiceCollection services, string connectionString)
+    public static IServiceCollection AddInfrastructure(this IServiceCollection services, string connectionString, IConfiguration configuration)
     {
         services.AddDbContext<AppDbContext>(options =>
         {
             options.UseNpgsql(connectionString);
-            options.UseOpenIddict<Guid>();
         });
 
         services.AddIdentity<ApplicationUser, IdentityRole<Guid>>(options =>
@@ -35,14 +38,30 @@ public static class DependencyInjection
         .AddEntityFrameworkStores<AppDbContext>()
         .AddDefaultTokenProviders();
 
+        // AddIdentity sets cookie auth as the default scheme, which produces 302 redirects
+        // on API endpoints. Override so [Authorize] challenges via Bearer/OpenIddict instead.
+        services.AddAuthentication(options =>
+        {
+            options.DefaultAuthenticateScheme = OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme;
+            options.DefaultChallengeScheme    = OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme;
+            options.DefaultForbidScheme       = OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme;
+        });
+
         services.AddOpenIddict()
-            .AddCore(options => options.UseEntityFrameworkCore().UseDbContext<AppDbContext>())
+            .AddCore(options => options
+                .UseEntityFrameworkCore()
+                .UseDbContext<AppDbContext>())
             .AddServer(options =>
             {
                 options.SetTokenEndpointUris("/connect/token");
                 options.AllowPasswordFlow();
                 options.AcceptAnonymousClients();
-                options.UseAspNetCore().EnableTokenEndpointPassthrough();
+                options.AddDevelopmentEncryptionCertificate()
+                       .AddDevelopmentSigningCertificate();
+                var aspNetCore = options.UseAspNetCore()
+                       .EnableTokenEndpointPassthrough();
+                if (configuration.GetValue<bool>("Auth:DisableTransportSecurity"))
+                    aspNetCore.DisableTransportSecurityRequirement();
             })
             .AddValidation(options =>
             {
@@ -58,6 +77,9 @@ public static class DependencyInjection
         services.AddScoped<IClinicSettingsRepository, ClinicSettingsRepository>();
         services.AddScoped<IIdentityService, IdentityService>();
         services.AddScoped<IMessageLocalizer, MessageLocalizer>();
+
+        services.AddScoped<IDataSeeder, AdminUserSeeder>();
+        services.AddScoped<DatabaseSeeder>();
 
         return services;
     }

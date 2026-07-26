@@ -1524,8 +1524,10 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
     ?? throw new InvalidOperationException("Connection string 'DefaultConnection' is missing.");
 
 builder.Services.AddApplication();
-builder.Services.AddInfrastructure(connectionString);
-builder.Services.AddControllers();
+builder.Services.AddInfrastructure(connectionString, builder.Configuration);
+builder.Services.AddControllers()
+    .AddJsonOptions(o =>
+        o.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter()));
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
@@ -4006,10 +4008,14 @@ git commit -m "feat: add backend localization (Accept-Language middleware + IMes
 
 **Files:**
 - Create: `backend/src/CliniSys.Infrastructure/Persistence/Migrations/` (generated)
+- Create: `backend/src/CliniSys.Infrastructure/Persistence/Seeds/IDataSeeder.cs`
+- Create: `backend/src/CliniSys.Infrastructure/Persistence/Seeds/AdminUserSeeder.cs`
+- Create: `backend/src/CliniSys.Infrastructure/Persistence/Seeds/DatabaseSeeder.cs`
+- Modify: `backend/src/CliniSys.Infrastructure/DependencyInjection.cs`
 - Modify: `backend/src/CliniSys.Api/Program.cs`
 
 **Interfaces:**
-- Produces: initial migration covering all tables; auto-apply on startup; default Admin user seeded
+- Produces: initial migration covering all tables; auto-apply on startup; extensible seed pipeline with default Admin user
 
 - [ ] **Step 1: Ensure Docker Postgres is running**
 
@@ -4042,7 +4048,73 @@ dotnet ef database update \
 
 Expected: `Done.`
 
-- [ ] **Step 4: Add startup migration + seed to Program.cs**
+- [ ] **Step 4: Create seed infrastructure**
+
+`backend/src/CliniSys.Infrastructure/Persistence/Seeds/IDataSeeder.cs`:
+```csharp
+namespace CliniSys.Infrastructure.Persistence.Seeds;
+
+public interface IDataSeeder
+{
+    int Order { get; }
+    Task SeedAsync();
+}
+```
+
+`backend/src/CliniSys.Infrastructure/Persistence/Seeds/AdminUserSeeder.cs`:
+```csharp
+using CliniSys.Domain.Entities;
+using CliniSys.Domain.Enums;
+using Microsoft.AspNetCore.Identity;
+
+namespace CliniSys.Infrastructure.Persistence.Seeds;
+
+public class AdminUserSeeder(UserManager<ApplicationUser> userManager) : IDataSeeder
+{
+    public int Order => 1;
+
+    public async Task SeedAsync()
+    {
+        const string adminEmail = "admin@clinisys.local";
+
+        if (await userManager.FindByNameAsync(adminEmail) is not null)
+            return;
+
+        var admin = new ApplicationUser
+        {
+            Id       = Guid.NewGuid(),
+            UserName = adminEmail,
+            Email    = adminEmail,
+            FullName = "System Administrator",
+            Role     = Role.Admin
+        };
+
+        await userManager.CreateAsync(admin, "Admin@12345");
+    }
+}
+```
+
+`backend/src/CliniSys.Infrastructure/Persistence/Seeds/DatabaseSeeder.cs`:
+```csharp
+namespace CliniSys.Infrastructure.Persistence.Seeds;
+
+public class DatabaseSeeder(IEnumerable<IDataSeeder> seeders)
+{
+    public async Task SeedAsync()
+    {
+        foreach (var seeder in seeders.OrderBy(s => s.Order))
+            await seeder.SeedAsync();
+    }
+}
+```
+
+Register in `DependencyInjection.cs` (after the existing `AddScoped` registrations):
+```csharp
+services.AddScoped<IDataSeeder, AdminUserSeeder>();
+services.AddScoped<DatabaseSeeder>();
+```
+
+- [ ] **Step 5: Add startup migration + seed to Program.cs**
 
 Add the following block just before `app.Run()` in `backend/src/CliniSys.Api/Program.cs`:
 ```csharp
@@ -4051,26 +4123,14 @@ using (var scope = app.Services.CreateScope())
     var db = scope.ServiceProvider.GetRequiredService<CliniSys.Infrastructure.Persistence.AppDbContext>();
     await db.Database.MigrateAsync();
 
-    var userManager = scope.ServiceProvider
-        .GetRequiredService<Microsoft.AspNetCore.Identity.UserManager<CliniSys.Domain.Entities.ApplicationUser>>();
-
-    const string adminEmail = "admin@clinisys.local";
-    if (await userManager.FindByNameAsync(adminEmail) is null)
-    {
-        var admin = new CliniSys.Domain.Entities.ApplicationUser
-        {
-            Id       = Guid.NewGuid(),
-            UserName = adminEmail,
-            Email    = adminEmail,
-            FullName = "System Administrator",
-            Role     = CliniSys.Domain.Enums.Role.Admin
-        };
-        await userManager.CreateAsync(admin, "Admin@12345");
-    }
+    var seeder = scope.ServiceProvider.GetRequiredService<CliniSys.Infrastructure.Persistence.Seeds.DatabaseSeeder>();
+    await seeder.SeedAsync();
 }
 ```
 
-- [ ] **Step 5: Verify startup and seed**
+To add a new seed in future: implement `IDataSeeder`, set `Order`, and register with `services.AddScoped<IDataSeeder, YourSeeder>()`.
+
+- [ ] **Step 6: Verify startup and seed**
 
 ```bash
 cd backend && dotnet run --project src/CliniSys.Api
@@ -4079,10 +4139,12 @@ cd backend && dotnet run --project src/CliniSys.Api
 Expected: API starts at `http://localhost:5000`; no migration errors; admin user created in DB.
 Test: `POST http://localhost:5000/connect/token` with `grant_type=password&username=admin@clinisys.local&password=Admin@12345&scope=openid` → returns `{ access_token, ... }`.
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 7: Commit**
 
 ```bash
 git add backend/src/CliniSys.Infrastructure/Persistence/Migrations/ \
+         backend/src/CliniSys.Infrastructure/Persistence/Seeds/ \
+         backend/src/CliniSys.Infrastructure/DependencyInjection.cs \
          backend/src/CliniSys.Api/Program.cs
-git commit -m "feat: add EF Core migrations and startup seed (admin user)"
+git commit -m "feat: add EF Core migrations and extensible seed pipeline (admin user)"
 ```
