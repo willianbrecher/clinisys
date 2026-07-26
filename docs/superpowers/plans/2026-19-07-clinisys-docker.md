@@ -68,6 +68,8 @@ POSTGRES_PASSWORD=changeme
 POSTGRES_DB=clinisys
 DB_CONNECTION_STRING=Host=localhost;Port=5432;Database=clinisys;Username=clinisys;Password=changeme
 ASPNETCORE_ENVIRONMENT=Development
+# Set to true only when running behind a reverse proxy that terminates TLS, or in local dev
+AUTH_DISABLE_TRANSPORT_SECURITY=false
 ```
 
 - [ ] **Step 3: Create local `.env`**
@@ -78,6 +80,7 @@ POSTGRES_PASSWORD=clinisys_dev
 POSTGRES_DB=clinisys
 DB_CONNECTION_STRING=Host=localhost;Port=5432;Database=clinisys;Username=clinisys;Password=clinisys_dev
 ASPNETCORE_ENVIRONMENT=Development
+AUTH_DISABLE_TRANSPORT_SECURITY=true
 ```
 
 - [ ] **Step 4: Verify `.env` is git-ignored**
@@ -160,12 +163,16 @@ In `backend/src/CliniSys.Api/appsettings.Development.json`, set:
 ```json
 {
   "ConnectionStrings": {
-    "Default": "Host=localhost;Port=5432;Database=clinisys;Username=clinisys;Password=clinisys_dev"
+    "DefaultConnection": "Host=localhost;Port=5432;Database=clinisys;Username=clinisys;Password=clinisys_dev"
+  },
+  "Auth": {
+    "DisableTransportSecurity": true
   }
 }
 ```
 
-This matches the `.env` values used by the dev compose service.
+`DefaultConnection` is the key `Program.cs` reads via `GetConnectionString("DefaultConnection")`.
+`Auth:DisableTransportSecurity` disables OpenIddict's HTTPS-only enforcement for local HTTP dev (see Task 7).
 
 - [ ] **Step 5: Verify API starts and migrates**
 
@@ -225,6 +232,11 @@ RUN dotnet publish src/CliniSys.Api/CliniSys.Api.csproj \
 # --- Runtime stage ---
 FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS runtime
 WORKDIR /app
+
+# Alpine omits ICU by default, which enables globalization-invariant mode.
+# OpenIddict's X.509 certificate APIs require full globalization support.
+RUN apk add --no-cache icu-libs
+ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false
 
 # Non-root user for security
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
@@ -410,7 +422,8 @@ services:
         condition: service_healthy
     environment:
       ASPNETCORE_ENVIRONMENT: Production
-      ConnectionStrings__Default: "Host=postgres;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}"
+      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}"
+      Auth__DisableTransportSecurity: ${AUTH_DISABLE_TRANSPORT_SECURITY:-false}
     ports:
       - "8080:5000"
     networks:
@@ -438,16 +451,16 @@ networks:
 
 - [ ] **Step 2: Update `appsettings.json` to read connection string from env**
 
-In `backend/src/CliniSys.Api/appsettings.json`, ensure the connection string key matches the compose env var:
+In `backend/src/CliniSys.Api/appsettings.json`, ensure the connection string key matches what `Program.cs` reads:
 ```json
 {
   "ConnectionStrings": {
-    "Default": ""
+    "DefaultConnection": ""
   }
 }
 ```
 
-The empty string is fine — `ConnectionStrings__Default` environment variable overrides it at runtime via ASP.NET Core's environment-variable configuration provider (double-underscore = `:` separator).
+The empty string is fine — `ConnectionStrings__DefaultConnection` environment variable overrides it at runtime via ASP.NET Core's environment-variable configuration provider (double-underscore = `:` separator).
 
 - [ ] **Step 3: Build and start all services**
 
@@ -583,3 +596,135 @@ Run through the Development section steps from scratch (with a fresh terminal) t
 git add README.md
 git commit -m "docs: add README with dev and production workflow"
 ```
+
+---
+
+### Task 7: OpenIddict & Auth Runtime Fixes
+
+> **Status: Completed.** This task documents bugs discovered during first-run verification and the fixes applied. All changes are already in the codebase.
+
+**Root causes discovered and resolved:**
+
+#### 7.1 — OpenIddict requires signing & encryption certificates
+
+OpenIddict 5.x cannot issue tokens without at least one signing key configured. Add development certificates to `DependencyInjection.cs`:
+
+```csharp
+.AddServer(options =>
+{
+    // ...
+    options.AddDevelopmentEncryptionCertificate()
+           .AddDevelopmentSigningCertificate();
+    // ...
+})
+```
+
+In production, replace with real X.509 certificates from a certificate store or secrets manager.
+
+#### 7.2 — Alpine Docker image runs in globalization-invariant mode
+
+`aspnet:8.0-alpine` omits ICU libraries, which forces .NET into globalization-invariant mode. OpenIddict's X.509 certificate APIs use culture-aware string operations that throw in invariant mode. Fix in `backend/Dockerfile`:
+
+```dockerfile
+RUN apk add --no-cache icu-libs
+ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false
+```
+
+#### 7.3 — OpenIddict rejects HTTP requests by default
+
+OpenIddict enforces HTTPS on all token endpoints. In Docker (HTTP-only internal network) this breaks login. The flag is configurable so it can be enabled in dev and disabled in production:
+
+In `DependencyInjection.cs`:
+```csharp
+var aspNetCore = options.UseAspNetCore()
+    .EnableTokenEndpointPassthrough();
+if (configuration.GetValue<bool>("Auth:DisableTransportSecurity"))
+    aspNetCore.DisableTransportSecurityRequirement();
+```
+
+`AddInfrastructure` signature becomes `AddInfrastructure(string connectionString, IConfiguration configuration)`.
+
+Set in `appsettings.Development.json`:
+```json
+{ "Auth": { "DisableTransportSecurity": true } }
+```
+
+Set in `docker-compose.yml` via env var (see Task 5 Step 1). Default is `false`.
+
+#### 7.4 — OpenIddict EF Core entity type mismatch (uuid vs text)
+
+The initial migration was generated with `options.UseOpenIddict<Guid>()`, creating `uuid` columns for OpenIddict table IDs. However, OpenIddict 5.x's store resolver always uses the non-generic entity aliases (`OpenIddictEntityFrameworkCoreToken` = string key) — there is no public API in 5.x to override this. The model and store resolver were mismatched.
+
+**Fix:** Use string keys throughout for all OpenIddict entities.
+
+In `AppDbContext.OnModelCreating`:
+```csharp
+builder.UseOpenIddict(); // no <Guid>
+```
+
+In `DependencyInjection.cs` `AddDbContext`:
+```csharp
+options.UseNpgsql(connectionString); // no options.UseOpenIddict<Guid>()
+```
+
+In `AddCore`:
+```csharp
+options.UseEntityFrameworkCore().UseDbContext<AppDbContext>() // no ReplaceDefault*Entity
+```
+
+The `InitialCreate` migration and model snapshot were updated to use `string/text` for the 7 affected OpenIddict ID columns (`OpenIddictApplications.Id`, `OpenIddictScopes.Id`, `OpenIddictAuthorizations.Id`+`ApplicationId`, `OpenIddictTokens.Id`+`ApplicationId`+`AuthorizationId`).
+
+**After applying this fix, drop and recreate the postgres volume:**
+```bash
+docker compose down -v
+docker compose up --build
+```
+
+#### 7.5 — Frontend decoded encrypted JWT (jwtDecode incompatible with JWE)
+
+OpenIddict encrypts access tokens by default when `AddDevelopmentEncryptionCertificate()` is configured, producing a 5-part JWE. The frontend called `jwtDecode(token)` which only works on 3-part signed JWTs (JWS). This caused a silent exception on every login attempt even when the backend returned a valid token.
+
+**Fix:** Remove all client-side JWT decoding. After login, fetch user info from a dedicated endpoint.
+
+**Backend** — add `GET /api/account/me` to `AccountController`:
+```csharp
+[HttpGet("me")]
+public IActionResult Me() => Ok(new
+{
+    userId   = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue(Claims.Subject),
+    role     = User.FindFirstValue("role"),
+    fullName = User.FindFirstValue("fullName"),
+    theme    = User.FindFirstValue("theme"),
+    language = User.FindFirstValue("language"),
+    doctorId = User.FindFirstValue("doctorId"),
+});
+```
+
+**Frontend** — `AuthContext.tsx`:
+- Remove `jwtDecode` import entirely
+- After login: store token, then call `GET /api/account/me` to get role/theme/language/fullName
+- On mount: if token exists in localStorage, call `GET /api/account/me` to restore session (fails gracefully if token expired)
+- Expose `loading: boolean` from the context
+
+**Frontend** — `ProtectedRoute.tsx`:
+- Return `null` while `loading` is true to prevent premature redirect to `/login` during session restore
+
+**Frontend** — `api/account.ts`:
+- Add `MeResponse` interface and `getMe()` function
+
+#### 7.6 — AddIdentity overrides default auth scheme, causing 302 on API endpoints
+
+`AddIdentity` internally calls `AddAuthentication` and sets cookie auth (`IdentityConstants.ApplicationScheme`) as the default authenticate, challenge, and forbid scheme. Any `[Authorize]`-decorated API endpoint hit without a valid cookie triggers a 302 redirect to `/Account/Login` instead of returning 401/403.
+
+**Fix:** After `AddIdentity`, override the three default schemes to OpenIddict's validation scheme in `DependencyInjection.cs`:
+
+```csharp
+services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme    = OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme;
+    options.DefaultForbidScheme       = OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme;
+});
+```
+
+`AddAuthentication` merges options when called multiple times, so this safely overrides what `AddIdentity` set without removing cookie support (still used internally by Identity's user management).

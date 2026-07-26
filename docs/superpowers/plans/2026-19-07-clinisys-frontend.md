@@ -156,23 +156,29 @@ export default config;
 
 `frontend/vite.config.ts`:
 ```ts
-import { defineConfig } from "vite";
+import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
 
-export default defineConfig({
-  plugins: [react()],
-  resolve: {
-    alias: { "@": path.resolve(__dirname, "./src") },
-  },
-  server: {
-    proxy: {
-      "/api": { target: "http://localhost:5000", changeOrigin: true },
-      "/connect": { target: "http://localhost:5000", changeOrigin: true },
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), "");
+  const backendUrl = env.VITE_BACKEND_URL ?? "http://localhost:5110";
+  return {
+    plugins: [react()],
+    resolve: {
+      alias: { "@": path.resolve(__dirname, "./src") },
     },
-  },
+    server: {
+      proxy: {
+        "/api": { target: backendUrl, changeOrigin: true },
+        "/connect": { target: backendUrl, changeOrigin: true },
+      },
+    },
+  };
 });
 ```
+
+> **Note:** `loadEnv` is required to read `.env` variables inside `vite.config.ts` — `process.env.VITE_BACKEND_URL` does not pick up `.env` files without it. Set `VITE_BACKEND_URL` in `.env` to override the default `http://localhost:5110`.
 
 Also update `tsconfig.json` to add the path alias:
 ```json

@@ -16,7 +16,7 @@ availability rules beyond clinic-wide open hours.
 ## 2. Tech Stack
 
 - **Runtime:** .NET 8, C# 12, nullable enabled, implicit usings, file-scoped namespaces.
-- **API:** ASP.NET Core Web API, Swagger/OpenAPI (Swashbuckle).
+- **API:** ASP.NET Core Web API, Swagger/OpenAPI (Swashbuckle). Enums serialized as strings globally via `JsonStringEnumConverter` (configured in `AddControllers().AddJsonOptions(...)`).
 - **CQRS:** MediatR 12.
 - **Validation:** FluentValidation 11 (`FluentValidation.DependencyInjectionExtensions`).
 - **Auth:** OpenIddict 5 — OAuth 2.0 server on top of ASP.NET Core Identity + EF Core.
