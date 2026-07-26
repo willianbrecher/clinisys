@@ -1,19 +1,9 @@
-import { createContext, useContext, useState, useCallback, type ReactNode } from "react";
-import { jwtDecode } from "jwt-decode";
+import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react";
 import { useTheme } from "next-themes";
 import i18n from "@/i18n";
 import { login as apiLogin } from "@/api/auth";
-import type { Role, ThemePreference } from "@/api/types";
-
-interface JwtPayload {
-  sub: string;
-  role: Role;
-  theme: ThemePreference;
-  language: string;
-  fullName: string;
-  doctorId?: string;
-  exp: number;
-}
+import { getMe } from "@/api/account";
+import type { Role } from "@/api/types";
 
 interface AuthState {
   userId: string;
@@ -24,6 +14,7 @@ interface AuthState {
 
 interface AuthContextValue extends AuthState {
   isAuthenticated: boolean;
+  loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
 }
@@ -32,37 +23,35 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 
 const TOKEN_KEY = "clinisys_token";
 
-function decodeToken(token: string): JwtPayload {
-  return jwtDecode<JwtPayload>(token);
-}
-
-function stateFromToken(token: string): AuthState {
-  const payload = decodeToken(token);
-  return {
-    userId: payload.sub,
-    role: payload.role,
-    fullName: payload.fullName,
-    doctorId: payload.doctorId,
-  };
+function applyPreferences(theme: string, language: string, setTheme: (t: string) => void) {
+  setTheme(theme === "System" ? "system" : theme === "Dark" ? "dark" : "light");
+  i18n.changeLanguage(language);
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { setTheme } = useTheme();
-  const [auth, setAuth] = useState<AuthState | null>(() => {
+  const [auth, setAuth] = useState<AuthState | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
     const token = localStorage.getItem(TOKEN_KEY);
-    if (!token) return null;
-    try { return stateFromToken(token); } catch { return null; }
-  });
+    if (!token) { setLoading(false); return; }
+
+    getMe()
+      .then(me => {
+        applyPreferences(me.theme, me.language, setTheme);
+        setAuth({ userId: me.userId, role: me.role, fullName: me.fullName, doctorId: me.doctorId ?? undefined });
+      })
+      .catch(() => localStorage.removeItem(TOKEN_KEY))
+      .finally(() => setLoading(false));
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const login = useCallback(async (email: string, password: string) => {
     const token = await apiLogin(email, password);
-    const payload = decodeToken(token);
     localStorage.setItem(TOKEN_KEY, token);
-    localStorage.setItem("clinisys_language", payload.language);
-    setTheme(payload.theme === "System" ? "system"
-           : payload.theme === "Dark"   ? "dark" : "light");
-    await i18n.changeLanguage(payload.language);
-    setAuth(stateFromToken(token));
+    const me = await getMe();
+    applyPreferences(me.theme, me.language, setTheme);
+    setAuth({ userId: me.userId, role: me.role, fullName: me.fullName, doctorId: me.doctorId ?? undefined });
   }, [setTheme]);
 
   const logout = useCallback(() => {
@@ -74,6 +63,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     <AuthContext.Provider value={{
       ...(auth ?? { userId: "", role: "Staff" as Role, fullName: "" }),
       isAuthenticated: auth !== null,
+      loading,
       login,
       logout,
     }}>

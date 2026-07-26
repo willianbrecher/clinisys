@@ -8,12 +8,11 @@ interface Props {
 }
 
 export function ProtectedRoute({ children, allowedRoles }: Props) {
-  const { isAuthenticated, role } = useAuth();
+  const { isAuthenticated, loading, role } = useAuth();
 
+  if (loading) return null;
   if (!isAuthenticated) return <Navigate to="/login" replace />;
-
-  if (allowedRoles && !allowedRoles.includes(role))
-    return <Navigate to="/" replace />;
+  if (allowedRoles && !allowedRoles.includes(role)) return <Navigate to="/" replace />;
 
   return <>{children}</>;
 }
