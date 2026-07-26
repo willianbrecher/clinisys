@@ -5,7 +5,7 @@
     "minLength": "Debe tener al menos {0} caracteres.",
     "maxLength": "Debe tener como máximo {0} caracteres.",
     "invalidDate": "Fecha inválida.",
-    "pageSizeExceeded": "PageSize no puede superar 100.",
+    "pageSizeExceeded": "PageSize no puede superar 500.",
     "invalidImage": "Debe ser un URI de datos de imagen base64 válido (máx. 512 KB).",
     "invalidLanguage": "El idioma debe ser uno de: en-US, pt-BR, es-ES.",
     "passwordMismatch": "La nueva contraseña debe ser diferente de la actual.",

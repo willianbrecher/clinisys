@@ -75,7 +75,7 @@ namespace CliniSys.Infrastructure.Persistence.Migrations
                 name: "OpenIddictApplications",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Id = table.Column<string>(type: "text", nullable: false),
                     ApplicationType = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
                     ClientId = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
                     ClientSecret = table.Column<string>(type: "text", nullable: true),
@@ -101,7 +101,7 @@ namespace CliniSys.Infrastructure.Persistence.Migrations
                 name: "OpenIddictScopes",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Id = table.Column<string>(type: "text", nullable: false),
                     ConcurrencyToken = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
                     Description = table.Column<string>(type: "text", nullable: true),
                     Descriptions = table.Column<string>(type: "text", nullable: true),
@@ -263,8 +263,8 @@ namespace CliniSys.Infrastructure.Persistence.Migrations
                 name: "OpenIddictAuthorizations",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    ApplicationId = table.Column<Guid>(type: "uuid", nullable: true),
+                    Id = table.Column<string>(type: "text", nullable: false),
+                    ApplicationId = table.Column<string>(type: "text", nullable: true),
                     ConcurrencyToken = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
                     CreationDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     Properties = table.Column<string>(type: "text", nullable: true),
@@ -317,9 +317,9 @@ namespace CliniSys.Infrastructure.Persistence.Migrations
                 name: "OpenIddictTokens",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    ApplicationId = table.Column<Guid>(type: "uuid", nullable: true),
-                    AuthorizationId = table.Column<Guid>(type: "uuid", nullable: true),
+                    Id = table.Column<string>(type: "text", nullable: false),
+                    ApplicationId = table.Column<string>(type: "text", nullable: true),
+                    AuthorizationId = table.Column<string>(type: "text", nullable: true),
                     ConcurrencyToken = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
                     CreationDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     ExpirationDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),

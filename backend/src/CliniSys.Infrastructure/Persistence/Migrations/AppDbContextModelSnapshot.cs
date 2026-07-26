@@ -349,11 +349,10 @@ namespace CliniSys.Infrastructure.Persistence.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("OpenIddict.EntityFrameworkCore.Models.OpenIddictEntityFrameworkCoreApplication<System.Guid>", b =>
+            modelBuilder.Entity("OpenIddict.EntityFrameworkCore.Models.OpenIddictEntityFrameworkCoreApplication", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                    b.Property<string>("Id")
+                        .HasColumnType("text");
 
                     b.Property<string>("ApplicationType")
                         .HasMaxLength(50)
@@ -414,14 +413,13 @@ namespace CliniSys.Infrastructure.Persistence.Migrations
                     b.ToTable("OpenIddictApplications", (string)null);
                 });
 
-            modelBuilder.Entity("OpenIddict.EntityFrameworkCore.Models.OpenIddictEntityFrameworkCoreAuthorization<System.Guid>", b =>
+            modelBuilder.Entity("OpenIddict.EntityFrameworkCore.Models.OpenIddictEntityFrameworkCoreAuthorization", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                    b.Property<string>("Id")
+                        .HasColumnType("text");
 
-                    b.Property<Guid?>("ApplicationId")
-                        .HasColumnType("uuid");
+                    b.Property<string>("ApplicationId")
+                        .HasColumnType("text");
 
                     b.Property<string>("ConcurrencyToken")
                         .IsConcurrencyToken()
@@ -456,11 +454,10 @@ namespace CliniSys.Infrastructure.Persistence.Migrations
                     b.ToTable("OpenIddictAuthorizations", (string)null);
                 });
 
-            modelBuilder.Entity("OpenIddict.EntityFrameworkCore.Models.OpenIddictEntityFrameworkCoreScope<System.Guid>", b =>
+            modelBuilder.Entity("OpenIddict.EntityFrameworkCore.Models.OpenIddictEntityFrameworkCoreScope", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                    b.Property<string>("Id")
+                        .HasColumnType("text");
 
                     b.Property<string>("ConcurrencyToken")
                         .IsConcurrencyToken()
@@ -497,17 +494,16 @@ namespace CliniSys.Infrastructure.Persistence.Migrations
                     b.ToTable("OpenIddictScopes", (string)null);
                 });
 
-            modelBuilder.Entity("OpenIddict.EntityFrameworkCore.Models.OpenIddictEntityFrameworkCoreToken<System.Guid>", b =>
+            modelBuilder.Entity("OpenIddict.EntityFrameworkCore.Models.OpenIddictEntityFrameworkCoreToken", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                    b.Property<string>("Id")
+                        .HasColumnType("text");
 
-                    b.Property<Guid?>("ApplicationId")
-                        .HasColumnType("uuid");
+                    b.Property<string>("ApplicationId")
+                        .HasColumnType("text");
 
-                    b.Property<Guid?>("AuthorizationId")
-                        .HasColumnType("uuid");
+                    b.Property<string>("AuthorizationId")
+                        .HasColumnType("text");
 
                     b.Property<string>("ConcurrencyToken")
                         .IsConcurrencyToken()
@@ -638,22 +634,22 @@ namespace CliniSys.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("OpenIddict.EntityFrameworkCore.Models.OpenIddictEntityFrameworkCoreAuthorization<System.Guid>", b =>
+            modelBuilder.Entity("OpenIddict.EntityFrameworkCore.Models.OpenIddictEntityFrameworkCoreAuthorization", b =>
                 {
-                    b.HasOne("OpenIddict.EntityFrameworkCore.Models.OpenIddictEntityFrameworkCoreApplication<System.Guid>", "Application")
+                    b.HasOne("OpenIddict.EntityFrameworkCore.Models.OpenIddictEntityFrameworkCoreApplication", "Application")
                         .WithMany("Authorizations")
                         .HasForeignKey("ApplicationId");
 
                     b.Navigation("Application");
                 });
 
-            modelBuilder.Entity("OpenIddict.EntityFrameworkCore.Models.OpenIddictEntityFrameworkCoreToken<System.Guid>", b =>
+            modelBuilder.Entity("OpenIddict.EntityFrameworkCore.Models.OpenIddictEntityFrameworkCoreToken", b =>
                 {
-                    b.HasOne("OpenIddict.EntityFrameworkCore.Models.OpenIddictEntityFrameworkCoreApplication<System.Guid>", "Application")
+                    b.HasOne("OpenIddict.EntityFrameworkCore.Models.OpenIddictEntityFrameworkCoreApplication", "Application")
                         .WithMany("Tokens")
                         .HasForeignKey("ApplicationId");
 
-                    b.HasOne("OpenIddict.EntityFrameworkCore.Models.OpenIddictEntityFrameworkCoreAuthorization<System.Guid>", "Authorization")
+                    b.HasOne("OpenIddict.EntityFrameworkCore.Models.OpenIddictEntityFrameworkCoreAuthorization", "Authorization")
                         .WithMany("Tokens")
                         .HasForeignKey("AuthorizationId");
 
@@ -662,14 +658,14 @@ namespace CliniSys.Infrastructure.Persistence.Migrations
                     b.Navigation("Authorization");
                 });
 
-            modelBuilder.Entity("OpenIddict.EntityFrameworkCore.Models.OpenIddictEntityFrameworkCoreApplication<System.Guid>", b =>
+            modelBuilder.Entity("OpenIddict.EntityFrameworkCore.Models.OpenIddictEntityFrameworkCoreApplication", b =>
                 {
                     b.Navigation("Authorizations");
 
                     b.Navigation("Tokens");
                 });
 
-            modelBuilder.Entity("OpenIddict.EntityFrameworkCore.Models.OpenIddictEntityFrameworkCoreAuthorization<System.Guid>", b =>
+            modelBuilder.Entity("OpenIddict.EntityFrameworkCore.Models.OpenIddictEntityFrameworkCoreAuthorization", b =>
                 {
                     b.Navigation("Tokens");
                 });

@@ -5,6 +5,7 @@ using CliniSys.Application.Commands.Account.UpdateProfilePicture;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using static OpenIddict.Abstractions.OpenIddictConstants;
 
 namespace CliniSys.Api.Controllers;
 
@@ -19,6 +20,19 @@ public class AccountController : ControllerBase
 
     private Guid CurrentUserId => Guid.Parse(
         User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub")!);
+
+    /// <summary>Returns the current user's profile info from their token claims.</summary>
+    /// <returns>User identity payload.</returns>
+    [HttpGet("me")]
+    public IActionResult Me() => Ok(new
+    {
+        userId   = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue(Claims.Subject),
+        role     = User.FindFirstValue("role"),
+        fullName = User.FindFirstValue("fullName"),
+        theme    = User.FindFirstValue("theme"),
+        language = User.FindFirstValue("language"),
+        doctorId = User.FindFirstValue("doctorId"),
+    });
 
     /// <summary>Sets or removes the authenticated user's profile picture.</summary>
     /// <param name="request">Base64 data URI or null.</param>

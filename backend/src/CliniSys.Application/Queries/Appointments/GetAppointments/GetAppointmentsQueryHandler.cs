@@ -38,7 +38,7 @@ public class GetAppointmentsQueryHandler : IQueryHandler<GetAppointmentsQuery, P
     public async Task<PagedResult<AppointmentModel>> Handle(
         GetAppointmentsQuery request, CancellationToken cancellationToken)
     {
-        if (request.PageSize > 100) throw new ValidationException("PageSize cannot exceed 100.");
+        if (request.PageSize > 500) throw new ValidationException("PageSize cannot exceed 500.");
 
         var paged = await _repo.GetPagedAsync(
             request.DoctorId, request.PatientId, request.Date,

@@ -19,7 +19,7 @@ public class ClinicSettingsController : ControllerBase
     /// <summary>Returns current clinic settings. All authenticated roles.</summary>
     /// <param name="ct">Cancellation token.</param>
     /// <returns>Clinic settings.</returns>
-    [HttpGet]
+    [HttpGet, AllowAnonymous]
     public async Task<IActionResult> Get(CancellationToken ct) =>
         Ok(await _mediator.Send(new GetClinicSettingsQuery(), ct));
 

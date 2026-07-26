@@ -17,6 +17,7 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<Guid
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
+        builder.UseOpenIddict();
 
         builder.Entity<Doctor>(e =>
         {
