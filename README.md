@@ -2,7 +2,7 @@
 
 An open-source clinic management system for small to medium medical practices. CliniSys handles patient records, doctor profiles, and appointment scheduling through a clean web interface — all self-hosted with Docker.
 
-![License](https://img.shields.io/badge/license-MIT-blue) ![.NET](https://img.shields.io/badge/.NET-8-purple) ![React](https://img.shields.io/badge/React-18-blue)
+![License](https://img.shields.io/badge/license-Apache%202.0-blue) ![.NET](https://img.shields.io/badge/.NET-8-purple) ![React](https://img.shields.io/badge/React-18-blue)
 
 ---
 
@@ -179,4 +179,4 @@ The `AdminUserSeeder` (Order 1) is the built-in example.
 
 ## License
 
-MIT — free to use, modify, and distribute.
+Apache License 2.0 — see [LICENSE](LICENSE).
