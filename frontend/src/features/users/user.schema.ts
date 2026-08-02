@@ -3,7 +3,12 @@ import * as yup from "yup";
 export const createUserSchema = yup.object({
   email: yup.string().email().required("Email is required"),
   fullName: yup.string().required("Full name is required"),
-  password: yup.string().min(8, "At least 8 characters").required(),
+  password: yup.string()
+    .min(8, "At least 8 characters")
+    .matches(/[a-z]/, "Must contain a lowercase letter")
+    .matches(/[A-Z]/, "Must contain an uppercase letter")
+    .matches(/[0-9]/, "Must contain a digit")
+    .required("Password is required"),
   role: yup.string().oneOf(["Admin","Staff","Doctor"]).required("Role is required"),
   specialty: yup.string().when("role", {
     is: "Doctor",

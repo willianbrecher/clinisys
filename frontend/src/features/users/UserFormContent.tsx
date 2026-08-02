@@ -3,6 +3,7 @@ import { useForm, type Resolver } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
+import axios from "axios";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,7 +15,7 @@ import type { ModalContext } from "@/types/modal";
 export function UserFormContent() {
   const { t } = useTranslation();
   const { onClose, onSaved } = useOutletContext<ModalContext>();
-  const { register, handleSubmit, watch, formState: { errors, isSubmitting } } = useForm<CreateUserFormData>({
+  const { register, handleSubmit, watch, setError, formState: { errors, isSubmitting } } = useForm<CreateUserFormData>({
     resolver: yupResolver(createUserSchema) as unknown as Resolver<CreateUserFormData>,
   });
   const role = watch("role");
@@ -31,8 +32,16 @@ export function UserFormContent() {
       toast.success("User created.");
       onSaved();
       onClose();
-    } catch {
-      toast.error("Failed to create user.");
+    } catch (err) {
+      const apiErrors = axios.isAxiosError(err)
+        ? (err.response?.data?.errors as string[] | undefined)
+        : undefined;
+      const passwordError = apiErrors?.find((m) => m.toLowerCase().includes("password"));
+      if (passwordError) {
+        setError("password", { message: passwordError });
+      } else {
+        toast.error(apiErrors?.[0] ?? "Failed to create user.");
+      }
     }
   };
 
