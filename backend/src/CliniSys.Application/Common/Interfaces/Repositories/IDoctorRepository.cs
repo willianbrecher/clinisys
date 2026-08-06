@@ -16,4 +16,9 @@ public interface IDoctorRepository : IRepository<Doctor>
     /// <param name="userId">The user identifier.</param>
     /// <param name="ct">Cancellation token.</param>
     Task<Doctor?> GetByUserIdAsync(Guid userId, CancellationToken ct = default);
+
+    /// <summary>Finds a doctor by ID, including the User navigation. Returns <see langword="null"/> if none.</summary>
+    /// <param name="id">Doctor identifier.</param>
+    /// <param name="ct">Cancellation token.</param>
+    Task<Doctor?> GetByIdWithUserAsync(Guid id, CancellationToken ct = default);
 }
