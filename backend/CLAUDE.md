@@ -73,3 +73,11 @@ default admin and is the reference implementation for adding new seeders — reg
   `src/locales/*` bundles.
 - Default seeded admin: `admin@clinisys.local` / `Admin@12345` (change after first login in any
   real deployment).
+- **Don't fetch a single record by reusing a paginated list query with a large `pageSize`.**
+  `DoctorsController.GetById` used to call `GetDoctorsQuery(1, 1000)` and filter client-side for
+  the matching ID — but the list handlers reject any `PageSize > 100`
+  (`if (request.PageSize > 100) throw new ValidationException(...)`), so that call failed
+  unconditionally, every time (fixed in `GetDoctorByIdQuery`/`GetDoctorByIdQueryHandler`, backed
+  by `IDoctorRepository.GetByIdWithUserAsync`). `PatientsController.GetById` has the identical bug
+  (`GetPatientsQuery(null, 1, 1000)` against the same cap in `GetPatientsQueryHandler`) and is
+  still unfixed — give it the same dedicated-query treatment before touching patient editing.
