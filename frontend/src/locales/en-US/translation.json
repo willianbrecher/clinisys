@@ -16,7 +16,8 @@
     "previous": "Previous",
     "next": "Next",
     "select": "Select...",
-    "view": "View"
+    "view": "View",
+    "status": "Status"
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -82,6 +83,9 @@
     "specialty": "Specialty",
     "password": "Password",
     "deactivate": "Deactivate",
+    "reactivate": "Reactivate",
+    "statusActive": "Active",
+    "statusInactive": "Inactive",
     "resetPassword": "Reset Password",
     "newPassword": "New Password",
     "role_Admin": "Admin",

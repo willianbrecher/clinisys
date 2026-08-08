@@ -11,5 +11,8 @@ export const createUser = (data: {
 export const deactivateUser = (id: string) =>
   client.patch(`/api/users/${id}/deactivate`);
 
+export const reactivateUser = (id: string) =>
+  client.patch(`/api/users/${id}/reactivate`);
+
 export const resetPassword = (id: string, newPassword: string) =>
   client.post(`/api/users/${id}/reset-password`, { newPassword });

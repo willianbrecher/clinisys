@@ -6,8 +6,9 @@ import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { getUsers, deactivateUser, resetPassword } from "@/api/users";
+import { getUsers, deactivateUser, reactivateUser, resetPassword } from "@/api/users";
 import type { UserModel, PagedResult } from "@/api/types";
+import { getApiErrorMessage } from "@/lib/apiError";
 
 export function UsersPage() {
   const { t } = useTranslation();
@@ -28,7 +29,12 @@ export function UsersPage() {
 
   const handleDeactivate = async (id: string) => {
     try { await deactivateUser(id); toast.success("User deactivated."); load(); }
-    catch { toast.error("Failed to deactivate user."); }
+    catch (err) { toast.error(getApiErrorMessage(err, "Failed to deactivate user.")); }
+  };
+
+  const handleReactivate = async (id: string) => {
+    try { await reactivateUser(id); toast.success("User reactivated."); load(); }
+    catch (err) { toast.error(getApiErrorMessage(err, "Failed to reactivate user.")); }
   };
 
   const handleResetPw = async () => {
@@ -38,7 +44,9 @@ export function UsersPage() {
       toast.success("Password reset.");
       setResetTarget(null);
       setNewPw("");
-    } catch { toast.error("Failed to reset password."); }
+    } catch (err) {
+      toast.error(getApiErrorMessage(err, "Failed to reset password."));
+    }
   };
 
   return (
@@ -57,6 +65,7 @@ export function UsersPage() {
               <TableHead>{t("users.fullName")}</TableHead>
               <TableHead>{t("users.email")}</TableHead>
               <TableHead>{t("users.role")}</TableHead>
+              <TableHead>{t("common.status")}</TableHead>
               <TableHead>{t("common.actions")}</TableHead>
             </TableRow>
           </TableHeader>
@@ -67,9 +76,16 @@ export function UsersPage() {
                 <TableCell>{u.email}</TableCell>
                 <TableCell>{t(`users.role_${u.role}`)}</TableCell>
                 <TableCell>
+                  <span className={u.isActive ? "text-emerald-600" : "text-muted-foreground"}>
+                    {u.isActive ? t("users.statusActive") : t("users.statusInactive")}
+                  </span>
+                </TableCell>
+                <TableCell>
                   <div className="flex gap-2">
                     <Button size="sm" variant="outline" onClick={() => setResetTarget(u)}>{t("users.resetPassword")}</Button>
-                    <Button size="sm" variant="destructive" onClick={() => handleDeactivate(u.id)}>{t("users.deactivate")}</Button>
+                    {u.isActive
+                      ? <Button size="sm" variant="destructive" onClick={() => handleDeactivate(u.id)}>{t("users.deactivate")}</Button>
+                      : <Button size="sm" onClick={() => handleReactivate(u.id)}>{t("users.reactivate")}</Button>}
                   </div>
                 </TableCell>
               </TableRow>
@@ -83,9 +99,14 @@ export function UsersPage() {
           <div key={u.id} className="rounded-md border p-3 space-y-1">
             <p className="font-medium">{u.fullName}</p>
             <p className="text-sm text-muted-foreground">{u.email} · {t(`users.role_${u.role}`)}</p>
+            <p className={u.isActive ? "text-sm text-emerald-600" : "text-sm text-muted-foreground"}>
+              {u.isActive ? t("users.statusActive") : t("users.statusInactive")}
+            </p>
             <div className="flex gap-2 pt-1">
               <Button size="sm" variant="outline" className="flex-1" onClick={() => setResetTarget(u)}>{t("users.resetPassword")}</Button>
-              <Button size="sm" variant="destructive" className="flex-1" onClick={() => handleDeactivate(u.id)}>{t("users.deactivate")}</Button>
+              {u.isActive
+                ? <Button size="sm" variant="destructive" className="flex-1" onClick={() => handleDeactivate(u.id)}>{t("users.deactivate")}</Button>
+                : <Button size="sm" className="flex-1" onClick={() => handleReactivate(u.id)}>{t("users.reactivate")}</Button>}
             </div>
           </div>
         ))}
