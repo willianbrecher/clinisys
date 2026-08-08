@@ -345,7 +345,7 @@ git commit -m "feat: expose user active status and add reactivate endpoint"
 - Modify: `frontend/src/locales/pt-BR/translation.json`
 - Modify: `frontend/src/locales/es-ES/translation.json`
 
-- [ ] **Step 1: Add `isActive` to `UserModel`**
+- [x] **Step 1: Add `isActive` to `UserModel`**
 
 In `frontend/src/api/types.ts`, add to the `UserModel` interface:
 
@@ -361,7 +361,7 @@ export interface UserModel {
 }
 ```
 
-- [ ] **Step 2: Add `reactivateUser` to the API module**
+- [x] **Step 2: Add `reactivateUser` to the API module**
 
 In `frontend/src/api/users.ts`, add alongside `deactivateUser`:
 
@@ -371,7 +371,7 @@ export const reactivateUser = (id: string) => client.patch(`/api/users/${id}/rea
 
 (Match the exact existing `deactivateUser` signature/pattern in that file.)
 
-- [ ] **Step 3: Add locale keys**
+- [x] **Step 3: Add locale keys** — correction: `common.status` did **not** already exist (the plan's claim was wrong — the `"status"` key found under `"appointments"`, not `"common"`); added `"common.status"` (`"Status"`/`"Status"`/`"Estado"`) to all three locale files alongside the `users.*` keys below.
 
 `frontend/src/locales/en-US/translation.json`, in `"users"`, after `"deactivate": "Deactivate",`:
 
@@ -397,7 +397,7 @@ export const reactivateUser = (id: string) => client.patch(`/api/users/${id}/rea
 "statusInactive": "Inactivo",
 ```
 
-- [ ] **Step 4: Update `UsersPage.tsx`**
+- [x] **Step 4: Update `UsersPage.tsx`**
 
 Add imports:
 
@@ -455,11 +455,9 @@ Add the cell and swap the action button per row (desktop table body):
 
 Apply the equivalent status line + conditional button in the mobile card block (same file, the `md:hidden` section) — mirror the desktop change: status text under the email/role line, and the same `u.isActive ? deactivate : reactivate` button swap.
 
-- [ ] **Step 5: Manually verify**
+- [ ] **Step 5: Manually verify** — not done in this environment (no Node/npm to run the dev server, no running backend/Postgres either since 4a isn't deployed); still needs a live check via the `run` skill: confirm the Status column/line shows correctly for active users, deactivate one, confirm it flips to "Inactive" with a "Reactivate" button, click it, confirm it flips back.
 
-Via the `run` skill: confirm the Status column/line shows correctly for active users, deactivate one, confirm it flips to "Inactive" with a "Reactivate" button, click it, confirm it flips back.
-
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add frontend/src/api/types.ts frontend/src/api/users.ts frontend/src/features/users/UsersPage.tsx frontend/src/locales
