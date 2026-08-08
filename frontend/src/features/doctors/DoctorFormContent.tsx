@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { getDoctorById, updateDoctor } from "@/api/doctors";
+import { getApiErrorMessage } from "@/lib/apiError";
 import type { ModalContext } from "@/types/modal";
 
 export function DoctorFormContent() {
@@ -20,7 +21,12 @@ export function DoctorFormContent() {
   const { register, handleSubmit, reset, formState: { isSubmitting } } = useForm<{ specialty: string }>();
 
   useEffect(() => {
-    if (id) getDoctorById(id).then((d) => reset({ specialty: d.specialty })).catch(() => {});
+    if (!id) return;
+    let active = true;
+    getDoctorById(id)
+      .then((d) => { if (active) reset({ specialty: d.specialty }); })
+      .catch((err) => { if (active) toast.error(getApiErrorMessage(err, "Failed to load doctor.")); });
+    return () => { active = false; };
   }, [id, reset]);
 
   const onSubmit = async (data: { specialty: string }) => {

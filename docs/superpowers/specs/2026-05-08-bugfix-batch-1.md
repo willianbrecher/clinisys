@@ -66,15 +66,26 @@ useEffect(() => {
 }, [id, reset]);
 ```
 
-Static review of the form, the `Input` component (plain `forwardRef`, uncontrolled), and the backend (`GET /api/doctors/{id}` → `DoctorsController.GetById` → `GetDoctorsQueryHandler`, which does return `Specialty` correctly) did not surface a deterministic bug — field names match end-to-end (`specialty` on both sides).
+**Confirmed root cause (found via manual repro after the frontend fix below shipped and turned the previously-silent failure into a visible "Validation failed." toast):** `DoctorsController.GetById` (`backend/src/CliniSys.Api/Controllers/DoctorsController.cs`) fetched a single doctor by reusing the paginated list query with a hardcoded `pageSize: 1000`:
 
-**Leading hypothesis: stale-response race.** The fetch has no cancellation or staleness guard. `DoctorsPage` and `DoctorFormContent` stay mounted while only the `:id` route param changes when a user opens one doctor's edit dialog, then — without it fully closing — opens a different doctor's row action. If the first fetch resolves after the second one starts, `reset()` runs with the *first* doctor's data, overwriting the second doctor's freshly-loaded value (or, on a slow connection, the field can also appear to just stay blank if the promise never settles before the user notices). Also silently swallows fetch errors via `.catch(() => {})`, so a failed `GET` fails invisibly and the form is left empty with no error shown.
+```csharp
+var result = await _mediator.Send(new GetDoctorsQuery(1, 1000), ct);
+var doctor = result.Items.FirstOrDefault(d => d.Id == id);
+```
 
-**Proposed fix.**
-- Add a staleness guard in the effect (track the in-flight `id`, discard the result if it no longer matches the current `id` when the promise resolves — the standard `useEffect` async-cleanup pattern).
-- Surface fetch failures instead of swallowing them: `catch` → `toast.error(getApiErrorMessage(err, "Failed to load doctor."))` (reusing the helper from §2).
+But `GetDoctorsQueryHandler` rejects any `PageSize > 100`:
 
-**Verification needed before implementation:** reproduce manually (open doctor A's edit dialog, quickly switch to doctor B via the list) to confirm this is in fact the trigger, since it wasn't confirmed by static analysis alone.
+```csharp
+if (request.PageSize > 100) throw new ValidationException("PageSize cannot exceed 100.");
+```
+
+Since `1000 > 100`, `GetById` threw on **every single call, for every doctor, always** — a 100% reproducible bug, not a race condition. The frontend's original `.catch(() => {})` swallowed this silently, so the form just looked "not loaded." The initial fix below (stale-fetch guard + error surfacing) didn't address this — it only made the pre-existing failure visible instead of hiding it, which is what led to finding the real cause.
+
+**Applied fix.**
+- Frontend (still valid defensive improvement, applied first): added a staleness guard in `DoctorFormContent`'s fetch effect (track an `active` flag, skip `reset()`/error toast if the effect was cleaned up before the promise settles) and stopped swallowing fetch errors — `catch` → `toast.error(getApiErrorMessage(err, "Failed to load doctor."))` (reusing the helper from §2).
+- Backend (the actual fix): added `IDoctorRepository.GetByIdWithUserAsync` (EF `Include(d => d.User)` + `FirstOrDefaultAsync`, `backend/src/CliniSys.Infrastructure/Persistence/Repositories/DoctorRepository.cs`), a new `GetDoctorByIdQuery`/`GetDoctorByIdQueryHandler` (`backend/src/CliniSys.Application/Queries/Doctors/GetDoctorById/`) that fetches the single doctor directly instead of paging through up to 1000, and rewired `DoctorsController.GetById` to use it.
+
+**Related finding, out of scope for this issue:** `PatientsController.GetById` has the identical bug (`GetPatientsQuery(null, 1, 1000)` against a handler with the same `PageSize > 100` cap) — patient editing likely fails the same way. Not fixed as part of #1; worth its own issue.
 
 ## 4. #9 — User list doesn't show active/deactivated status; no reactivate action
 

@@ -23,4 +23,7 @@ internal class DoctorRepository : Repository<Doctor>, IDoctorRepository
 
     public Task<Doctor?> GetByUserIdAsync(Guid userId, CancellationToken ct = default) =>
         _set.Include(d => d.User).FirstOrDefaultAsync(d => d.UserId == userId, ct);
+
+    public Task<Doctor?> GetByIdWithUserAsync(Guid id, CancellationToken ct = default) =>
+        _set.Include(d => d.User).FirstOrDefaultAsync(d => d.Id == id, ct);
 }

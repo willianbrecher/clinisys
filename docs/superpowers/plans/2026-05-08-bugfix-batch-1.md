@@ -15,54 +15,44 @@
 
 ---
 
-### Task 1: Doctor edit form — stale-fetch guard (#1)
+### Task 1: Doctor edit form — fetch failure (#1)
 
 **Branch:** `fix/doctor-edit-stale-fetch` → PR `Closes #1`
 
+**Status: done.** The originally-planned frontend-only fetch-race guard turned out not to be the root cause — manual repro after applying it surfaced the real bug (backend), described below. Recorded here for the actual history; see spec §3 for full detail.
+
 **Files:**
-- Modify: `frontend/src/features/doctors/DoctorFormContent.tsx`
+- Modify: `frontend/src/features/doctors/DoctorFormContent.tsx` (defensive improvement, not the fix)
+- Create: `frontend/src/lib/apiError.ts` (pulled forward from Task 2 — required for the above)
+- Modify: `backend/src/CliniSys.Api/Controllers/DoctorsController.cs`
+- Modify: `backend/src/CliniSys.Application/Common/Interfaces/Repositories/IDoctorRepository.cs`
+- Modify: `backend/src/CliniSys.Infrastructure/Persistence/Repositories/DoctorRepository.cs`
+- Create: `backend/src/CliniSys.Application/Queries/Doctors/GetDoctorById/GetDoctorByIdQuery.cs`
+- Create: `backend/src/CliniSys.Application/Queries/Doctors/GetDoctorById/GetDoctorByIdQueryHandler.cs`
 
-**Interfaces:** none new.
+**What actually happened:**
 
-- [ ] **Step 1: Guard the fetch against stale/out-of-order responses and surface failures**
+1. Applied the planned frontend guard (staleness flag + error surfacing via `getApiErrorMessage`) in `DoctorFormContent.tsx`. This didn't fix the bug, but turned a silent failure into a visible "Validation failed." toast on every doctor edit.
+2. That toast revealed the real bug: `DoctorsController.GetById` called `GetDoctorsQuery(1, 1000)`, but `GetDoctorsQueryHandler` throws `ValidationException` for any `PageSize > 100`. `GetById` failed unconditionally, for every doctor, every time.
+3. Fixed by adding a proper single-record path instead of reusing the capped list query:
+   - `IDoctorRepository.GetByIdWithUserAsync(Guid id, CancellationToken ct)` — `_set.Include(d => d.User).FirstOrDefaultAsync(d => d.Id == id, ct)`.
+   - `GetDoctorByIdQuery(Guid Id) : IQuery<DoctorModel?>` + `GetDoctorByIdQueryHandler`, calling the new repo method and mapping to the existing `DoctorModel` record from `GetDoctors`.
+   - `DoctorsController.GetById` now sends `GetDoctorByIdQuery` instead of paging through `GetDoctorsQuery(1, 1000)`.
+4. Verified with `dotnet build` (0 errors) — no running dev server / browser repro available in this environment; **still needs a live check** (open the doctor edit dialog and confirm the specialty loads, and that `PATCH` still works).
 
-Replace the current effect:
+**Related, not fixed here:** `PatientsController.GetById` has the identical bug (`GetPatientsQuery(null, 1, 1000)` against the same `PageSize > 100` cap in `GetPatientsQueryHandler`) — patient editing likely fails the same way. Out of scope for #1; file a separate issue.
 
-```ts
-useEffect(() => {
-  if (id) getDoctorById(id).then((d) => reset({ specialty: d.specialty })).catch(() => {});
-}, [id, reset]);
-```
-
-with:
-
-```ts
-useEffect(() => {
-  if (!id) return;
-  let active = true;
-  getDoctorById(id)
-    .then((d) => { if (active) reset({ specialty: d.specialty }); })
-    .catch((err) => { if (active) toast.error(getApiErrorMessage(err, "Failed to load doctor.")); });
-  return () => { active = false; };
-}, [id, reset]);
-```
-
-Add the `getApiErrorMessage` import (created in Task 2 — do this task second if implementing strictly in file-dependency order, or stub the import and finish Task 2 before testing this one):
-
-```ts
-import { getApiErrorMessage } from "@/lib/apiError";
-```
-
-- [ ] **Step 2: Manually verify the fix**
-
-Use the `run` skill to launch the app. Reproduce the reported bug first on `master` if possible (open doctor A's edit dialog, then — without closing — click a different doctor's edit action) to confirm this was in fact the trigger before trusting the fix. If the bug reproduces differently (e.g. every single edit shows blank, not just when switching quickly), stop and re-diagnose rather than committing a fix for the wrong root cause.
-
-- [ ] **Step 3: Commit**
+- [ ] **Commit** (backend fix, plus the earlier frontend commit already made)
 
 ```bash
-git add frontend/src/features/doctors/DoctorFormContent.tsx
-git commit -m "fix: guard doctor edit form against stale specialty fetch"
+git add backend/src/CliniSys.Api/Controllers/DoctorsController.cs \
+        backend/src/CliniSys.Application/Common/Interfaces/Repositories/IDoctorRepository.cs \
+        backend/src/CliniSys.Infrastructure/Persistence/Repositories/DoctorRepository.cs \
+        backend/src/CliniSys.Application/Queries/Doctors/GetDoctorById
+git commit -m "fix: give doctors a proper GetById query instead of a capped list scan"
 ```
+
+- [ ] **Live verification still needed:** run the app (`run` skill or manually), open the doctor edit dialog for at least two different doctors, confirm the specialty field loads correctly each time, and confirm saving still works.
 
 ---
 

@@ -1,5 +1,6 @@
 using CliniSys.Api.Requests.Doctors;
 using CliniSys.Application.Commands.Doctors.UpdateDoctor;
+using CliniSys.Application.Queries.Doctors.GetDoctorById;
 using CliniSys.Application.Queries.Doctors.GetDoctors;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -33,8 +34,7 @@ public class DoctorsController : ControllerBase
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetById([FromRoute] Guid id, CancellationToken ct)
     {
-        var result = await _mediator.Send(new GetDoctorsQuery(1, 1000), ct);
-        var doctor = result.Items.FirstOrDefault(d => d.Id == id);
+        var doctor = await _mediator.Send(new GetDoctorByIdQuery(id), ct);
         return doctor is null ? NotFound() : Ok(doctor);
     }
 
