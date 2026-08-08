@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { getUsers, deactivateUser, resetPassword } from "@/api/users";
 import type { UserModel, PagedResult } from "@/api/types";
+import { getApiErrorMessage } from "@/lib/apiError";
 
 export function UsersPage() {
   const { t } = useTranslation();
@@ -38,7 +39,9 @@ export function UsersPage() {
       toast.success("Password reset.");
       setResetTarget(null);
       setNewPw("");
-    } catch { toast.error("Failed to reset password."); }
+    } catch (err) {
+      toast.error(getApiErrorMessage(err, "Failed to reset password."));
+    }
   };
 
   return (
