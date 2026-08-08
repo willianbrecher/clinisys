@@ -74,7 +74,7 @@ export function AppLayout() {
     <div className="flex min-h-screen">
       {/* Desktop sidebar */}
       <aside className="hidden lg:flex lg:w-56 lg:flex-col lg:fixed lg:inset-y-0 border-r bg-card">
-        <div className="flex items-center gap-2 px-4 py-4 border-b">
+        <div className="flex h-14 items-center gap-2 px-4 border-b">
           <LogoMark />
           <span className="font-semibold text-sm">CliniSys</span>
         </div>
@@ -95,7 +95,7 @@ export function AppLayout() {
               </Button>
             </SheetTrigger>
             <SheetContent side="left" className="w-56 p-0">
-              <div className="flex items-center gap-2 px-4 py-4 border-b">
+              <div className="flex h-14 items-center gap-2 px-4 border-b">
                 <LogoMark />
                 <span className="font-semibold text-sm">CliniSys</span>
               </div>
