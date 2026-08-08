@@ -1,6 +1,7 @@
 using CliniSys.Api.Requests.Users;
 using CliniSys.Application.Commands.Users.CreateUser;
 using CliniSys.Application.Commands.Users.DeactivateUser;
+using CliniSys.Application.Commands.Users.ReactivateUser;
 using CliniSys.Application.Commands.Users.ResetPassword;
 using CliniSys.Application.Queries.Users.GetUsers;
 using MediatR;
@@ -48,6 +49,17 @@ public class UsersController : ControllerBase
     public async Task<IActionResult> Deactivate([FromRoute] Guid id, CancellationToken ct)
     {
         await _mediator.Send(new DeactivateUserCommand(id), ct);
+        return NoContent();
+    }
+
+    /// <summary>Clears a user account's lockout.</summary>
+    /// <param name="id">User identifier.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>No content.</returns>
+    [HttpPatch("{id:guid}/reactivate")]
+    public async Task<IActionResult> Reactivate([FromRoute] Guid id, CancellationToken ct)
+    {
+        await _mediator.Send(new ReactivateUserCommand(id), ct);
         return NoContent();
     }
 

@@ -69,4 +69,11 @@ internal class IdentityService : IIdentityService
         await _userManager.SetLockoutEnabledAsync(user, true);
         await _userManager.SetLockoutEndDateAsync(user, DateTimeOffset.MaxValue);
     }
+
+    public async Task ReactivateUserAsync(Guid userId, CancellationToken ct = default)
+    {
+        var user = await _userManager.FindByIdAsync(userId.ToString())
+            ?? throw new InvalidOperationException("User not found.");
+        await _userManager.SetLockoutEndDateAsync(user, null);
+    }
 }

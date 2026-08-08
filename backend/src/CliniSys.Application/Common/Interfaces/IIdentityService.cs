@@ -35,4 +35,9 @@ public interface IIdentityService
     /// <param name="userId">User identifier.</param>
     /// <param name="ct">Cancellation token.</param>
     Task DeactivateUserAsync(Guid userId, CancellationToken ct = default);
+
+    /// <summary>Clears an indefinite lockout, restoring the user's ability to sign in.</summary>
+    /// <param name="userId">User identifier.</param>
+    /// <param name="ct">Cancellation token.</param>
+    Task ReactivateUserAsync(Guid userId, CancellationToken ct = default);
 }

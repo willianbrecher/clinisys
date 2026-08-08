@@ -13,8 +13,9 @@ namespace CliniSys.Application.Queries.Users.GetUsers;
 /// <param name="Role">User role.</param>
 /// <param name="ThemePreference">Preferred theme.</param>
 /// <param name="LanguagePreference">Preferred language.</param>
+/// <param name="IsActive">Whether the account is not currently locked out.</param>
 public record UserModel(Guid Id, string? Email, string FullName, Role Role,
-    ThemePreference ThemePreference, string LanguagePreference);
+    ThemePreference ThemePreference, string LanguagePreference, bool IsActive);
 
 /// <summary>Handler for <see cref="GetUsersQuery"/>.</summary>
 public class GetUsersQueryHandler : IQueryHandler<GetUsersQuery, PagedResult<UserModel>>
@@ -33,7 +34,9 @@ public class GetUsersQueryHandler : IQueryHandler<GetUsersQuery, PagedResult<Use
         if (request.PageSize > 100) throw new ValidationException("PageSize cannot exceed 100.");
         var paged = await _repo.GetPagedAsync(request.Page, request.PageSize, cancellationToken);
         var items = paged.Items.Select(u =>
-            new UserModel(u.Id, u.Email, u.FullName, u.Role, u.ThemePreference, u.LanguagePreference)).ToList();
+            new UserModel(u.Id, u.Email, u.FullName, u.Role, u.ThemePreference, u.LanguagePreference,
+                IsActive: !(u.LockoutEnabled && u.LockoutEnd.HasValue && u.LockoutEnd > DateTimeOffset.UtcNow)))
+            .ToList();
         return new PagedResult<UserModel>(items, paged.Page, paged.PageSize, paged.TotalCount, paged.TotalPages);
     }
 }
