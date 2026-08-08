@@ -206,7 +206,7 @@ Two PRs — backend first, frontend depends on it.
 **Interfaces:**
 - Produces: `UserModel.IsActive: bool`; `PATCH /api/users/{id}/reactivate`.
 
-- [ ] **Step 1: Add `ReactivateUserAsync` to `IIdentityService`**
+- [x] **Step 1: Add `ReactivateUserAsync` to `IIdentityService`**
 
 In `backend/src/CliniSys.Application/Common/Interfaces/IIdentityService.cs`, add after `DeactivateUserAsync`:
 
@@ -217,7 +217,7 @@ In `backend/src/CliniSys.Application/Common/Interfaces/IIdentityService.cs`, add
 Task ReactivateUserAsync(Guid userId, CancellationToken ct = default);
 ```
 
-- [ ] **Step 2: Implement it in `IdentityService`**
+- [x] **Step 2: Implement it in `IdentityService`**
 
 In `backend/src/CliniSys.Infrastructure/Identity/IdentityService.cs`, add after `DeactivateUserAsync`:
 
@@ -230,7 +230,7 @@ public async Task ReactivateUserAsync(Guid userId, CancellationToken ct = defaul
 }
 ```
 
-- [ ] **Step 3: Add `ReactivateUserCommand`**
+- [x] **Step 3: Add `ReactivateUserCommand`**
 
 `backend/src/CliniSys.Application/Commands/Users/ReactivateUser/ReactivateUserCommand.cs`:
 
@@ -273,7 +273,7 @@ public class ReactivateUserCommandHandler : ICommandHandler<ReactivateUserComman
 }
 ```
 
-- [ ] **Step 4: Add `IsActive` to `UserModel` and compute it in the handler**
+- [x] **Step 4: Add `IsActive` to `UserModel` and compute it in the handler**
 
 In `backend/src/CliniSys.Application/Queries/Users/GetUsers/GetUsersQueryHandler.cs`, change the record:
 
@@ -293,7 +293,7 @@ var items = paged.Items.Select(u =>
 
 Confirmed: `ApplicationUser : IdentityUser<Guid>` (`backend/src/CliniSys.Domain/Entities/ApplicationUser.cs`), so `LockoutEnabled`/`LockoutEnd` are directly available on `u` — no extra mapping needed.
 
-- [ ] **Step 5: Add the endpoint**
+- [x] **Step 5: Add the endpoint**
 
 In `backend/src/CliniSys.Api/Controllers/UsersController.cs`, add the using and endpoint after `Deactivate`:
 
@@ -314,15 +314,9 @@ public async Task<IActionResult> Reactivate([FromRoute] Guid id, CancellationTok
 }
 ```
 
-- [ ] **Step 6: Build and manually verify via Swagger**
+- [x] **Step 6: Build** — `dotnet build` passes with 0 errors/warnings. **Manual Swagger verification still needed** (no running dev server/Postgres in this environment): hit `GET /api/users` and confirm `isActive` appears (camelCase per the API's JSON settings), then `PATCH /api/users/{id}/deactivate` followed by `PATCH /api/users/{id}/reactivate` and confirm `isActive` flips accordingly on a subsequent `GET`.
 
-```bash
-cd backend && dotnet build
-```
-
-Run the API (`dotnet run` from `CliniSys.Api`), hit `GET /api/users` via Swagger and confirm `isActive` appears (camelCase per the API's JSON settings), then `PATCH /api/users/{id}/deactivate` followed by `PATCH /api/users/{id}/reactivate` and confirm `isActive` flips accordingly on a subsequent `GET`.
-
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add backend/src/CliniSys.Application/Common/Interfaces/IIdentityService.cs \
