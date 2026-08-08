@@ -469,7 +469,7 @@ git commit -m "feat: show user active status and add reactivate action"
 
 **Interfaces:** none.
 
-- [ ] **Step 1: Match the desktop sidebar header height to the content header**
+- [x] **Step 1: Match the desktop sidebar header height to the content header**
 
 In `frontend/src/components/AppLayout.tsx`, change:
 
@@ -489,7 +489,7 @@ In `frontend/src/components/AppLayout.tsx`, change:
 </div>
 ```
 
-- [ ] **Step 2: Apply the same change to the mobile `SheetContent` header block**
+- [x] **Step 2: Apply the same change to the mobile `SheetContent` header block**
 
 The second occurrence of the identical `px-4 py-4 border-b` block (inside `<SheetContent>`) must change the same way, so the mobile drawer's header matches too:
 
@@ -500,11 +500,9 @@ The second occurrence of the identical `px-4 py-4 border-b` block (inside `<Shee
 </div>
 ```
 
-- [ ] **Step 3: Manually verify visually**
+- [ ] **Step 3: Manually verify visually** — not done yet in this pass; still needs a live check via the `run` skill: check desktop layout (sidebar header lines up with content header) and confirm the mobile drawer (open the hamburger menu below `lg` breakpoint) still looks correct — the logo should still be vertically centered at the smaller `h-7 w-7` mobile size used elsewhere in the header, not just the desktop `h-8 w-8`.
 
-Via the `run` skill: check desktop layout (sidebar header lines up with content header) and confirm the mobile drawer (open the hamburger menu below `lg` breakpoint) still looks correct — the logo should still be vertically centered at the smaller `h-7 w-7` mobile size used elsewhere in the header, not just the desktop `h-8 w-8`.
-
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add frontend/src/components/AppLayout.tsx
