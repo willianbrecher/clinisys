@@ -136,7 +136,7 @@ git commit -m "fix: surface backend error messages on appointment save"
 
 **Interfaces:** consumes `getApiErrorMessage` from Task 2 — do this task after Task 2 lands, or rebase onto it.
 
-- [ ] **Step 1: Use the helper in `handleResetPw`**
+- [x] **Step 1: Use the helper in `handleResetPw`**
 
 In `frontend/src/features/users/UsersPage.tsx`, add the import:
 
@@ -174,11 +174,9 @@ const handleResetPw = async () => {
 };
 ```
 
-- [ ] **Step 2: Manually verify**
+- [ ] **Step 2: Manually verify** — not done in this environment (no Node/npm available to run the dev server); still needs a live check via the `run` skill: as Admin, reset a user's password to something that fails Identity's complexity rules (e.g. `"abc"`, below the client-side 8-char minimum bypassed by editing devtools, or just confirm the client-side `newPw.length < 8` guard first — then test a password that's 8+ chars but still fails server-side rules if any additional rules exist beyond length). Confirm the toast shows the specific rule violation instead of "Failed to reset password."
 
-Via the `run` skill: as Admin, reset a user's password to something that fails Identity's complexity rules (e.g. `"abc"`, below the client-side 8-char minimum bypassed by editing devtools, or just confirm the client-side `newPw.length < 8` guard first — then test a password that's 8+ chars but still fails server-side rules if any additional rules exist beyond length). Confirm the toast shows the specific rule violation instead of "Failed to reset password."
-
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add frontend/src/features/users/UsersPage.tsx
