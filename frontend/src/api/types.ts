@@ -50,6 +50,7 @@ export interface UserModel {
   role: Role;
   themePreference: ThemePreference;
   languagePreference: string;
+  isActive: boolean;
 }
 
 export interface ClinicSettingsModel {
