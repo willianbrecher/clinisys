@@ -51,6 +51,11 @@ if the label/assignee weren't set at creation time — don't leave a PR unlabele
 Every branch Claude creates must be `feature/<slug>` or `fix/<slug>` and reference an issue —
 no exceptions. Only the user may bypass this rule themselves.
 
+## Commits
+
+**Never add a `Co-Authored-By: Claude ...` (or any Anthropic/Claude) trailer to commit
+messages in this repo.** Commit as the user only — no exceptions.
+
 ## Comments
 
 **No comments that just restate the spec or business logic**, in backend or frontend code — only
