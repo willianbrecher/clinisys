@@ -33,6 +33,7 @@
     "login": "Sign In",
     "email": "Email",
     "password": "Password",
+    "rememberMe": "Remember me",
     "changePassword": "Change Password",
     "currentPassword": "Current Password",
     "newPassword": "New Password",
