@@ -33,6 +33,7 @@
     "login": "Entrar",
     "email": "E-mail",
     "password": "Senha",
+    "rememberMe": "Lembrar de mim",
     "changePassword": "Alterar Senha",
     "currentPassword": "Senha Atual",
     "newPassword": "Nova Senha",
