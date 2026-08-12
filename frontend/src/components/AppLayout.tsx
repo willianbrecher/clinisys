@@ -141,6 +141,8 @@ export function AppLayout() {
 
           <Separator orientation="vertical" className="h-6" />
 
+          <span className="text-sm font-medium">{fullName}</span>
+
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-8 w-8 rounded-full p-0">
@@ -150,8 +152,6 @@ export function AppLayout() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <div className="px-2 py-1.5 text-sm font-medium">{fullName}</div>
-              <Separator />
               <DropdownMenuItem onClick={() => navigate("/account")}>
                 <User className="mr-2 h-4 w-4" />{t("nav.account")}
               </DropdownMenuItem>
