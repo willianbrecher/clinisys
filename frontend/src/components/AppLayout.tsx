@@ -3,7 +3,7 @@ import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
   LayoutDashboard, Users, UserRound, CalendarDays,
-  Settings, User, LogOut, Menu,
+  Settings, User, LogOut, Menu, Shield, ChevronDown,
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -32,23 +32,49 @@ interface NavItem {
 function SidebarContent({ onNav }: { onNav?: () => void }) {
   const { t } = useTranslation();
   const { role } = useAuth();
+  const [adminOpen, setAdminOpen] = useState(false);
 
-  const links: NavItem[] = [
+  const topLinks: NavItem[] = [
     { to: "/", icon: <LayoutDashboard className="h-4 w-4" />, label: t("nav.dashboard"), roles: ["Admin","Staff","Doctor"] },
     { to: "/patients", icon: <UserRound className="h-4 w-4" />, label: t("nav.patients"), roles: ["Admin","Staff"] },
     { to: "/doctors", icon: <Users className="h-4 w-4" />, label: t("nav.doctors"), roles: ["Admin","Staff"] },
     { to: "/appointments", icon: <CalendarDays className="h-4 w-4" />, label: t("nav.appointments"), roles: ["Admin","Staff","Doctor"] },
+  ];
+
+  const adminLinks: NavItem[] = [
     { to: "/users", icon: <Users className="h-4 w-4" />, label: t("nav.users"), roles: ["Admin"] },
     { to: "/settings", icon: <Settings className="h-4 w-4" />, label: t("nav.settings"), roles: ["Admin"] },
   ];
 
   return (
     <nav className="flex flex-col gap-1 p-4">
-      {links.filter((l) => l.roles.includes(role)).map((l) => (
+      {topLinks.filter((l) => l.roles.includes(role)).map((l) => (
         <NavLink key={l.to} to={l.to} end={l.to === "/"} className={navLinkClass} onClick={onNav}>
           {l.icon}{l.label}
         </NavLink>
       ))}
+      {role === "Admin" && (
+        <div>
+          <button
+            type="button"
+            onClick={() => setAdminOpen((o) => !o)}
+            className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground"
+          >
+            <Shield className="h-4 w-4" />
+            {t("nav.administration")}
+            <ChevronDown className={`ml-auto h-4 w-4 transition-transform ${adminOpen ? "rotate-180" : ""}`} />
+          </button>
+          {adminOpen && (
+            <div className="ml-4 flex flex-col gap-1">
+              {adminLinks.map((l) => (
+                <NavLink key={l.to} to={l.to} className={navLinkClass} onClick={onNav}>
+                  {l.icon}{l.label}
+                </NavLink>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </nav>
   );
 }
