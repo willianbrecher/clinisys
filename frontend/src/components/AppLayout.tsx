@@ -40,7 +40,6 @@ function SidebarContent({ onNav }: { onNav?: () => void }) {
     { to: "/appointments", icon: <CalendarDays className="h-4 w-4" />, label: t("nav.appointments"), roles: ["Admin","Staff","Doctor"] },
     { to: "/users", icon: <Users className="h-4 w-4" />, label: t("nav.users"), roles: ["Admin"] },
     { to: "/settings", icon: <Settings className="h-4 w-4" />, label: t("nav.settings"), roles: ["Admin"] },
-    { to: "/account", icon: <User className="h-4 w-4" />, label: t("nav.account"), roles: ["Admin","Staff","Doctor"] },
   ];
 
   return (
