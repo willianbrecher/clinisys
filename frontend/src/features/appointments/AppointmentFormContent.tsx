@@ -16,6 +16,7 @@ import { appointmentSchema, statusSchema, type AppointmentFormData, type StatusF
 import type { AppointmentModel, PatientModel, DoctorModel, AppointmentStatus } from "@/api/types";
 import { useAuth } from "@/auth/AuthContext";
 import type { ModalContext } from "@/types/modal";
+import { getApiErrorMessage } from "@/lib/apiError";
 
 export function AppointmentFormContent() {
   const { t } = useTranslation();
@@ -86,8 +87,8 @@ export function AppointmentFormContent() {
       toast.success("Status updated.");
       onSaved();
       onClose();
-    } catch {
-      toast.error("Failed to update status.");
+    } catch (err) {
+      toast.error(getApiErrorMessage(err, "Failed to update status."));
     }
   };
 
