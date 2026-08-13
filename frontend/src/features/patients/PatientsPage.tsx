@@ -9,7 +9,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { getPatients, deactivatePatient } from "@/api/patients";
+import { getPatients } from "@/api/patients";
 import type { PatientModel, PagedResult } from "@/api/types";
 
 export function PatientsPage() {
@@ -29,16 +29,6 @@ export function PatientsPage() {
   useEffect(() => { load(); }, [load]);
 
   const close = () => navigate("/patients");
-
-  const handleDeactivate = async (id: string) => {
-    try {
-      await deactivatePatient(id);
-      toast.success("Patient deactivated.");
-      load();
-    } catch {
-      toast.error("Failed to deactivate patient.");
-    }
-  };
 
   return (
     <div className="space-y-4">
@@ -76,9 +66,6 @@ export function PatientsPage() {
                     <Button size="sm" variant="outline" onClick={() => navigate(`/patients/${p.id}/edit`)}>
                       {t("common.edit")}
                     </Button>
-                    <Button size="sm" variant="destructive" onClick={() => handleDeactivate(p.id)}>
-                      {t("patients.deactivate")}
-                    </Button>
                   </div>
                 </TableCell>
               </TableRow>
@@ -97,11 +84,8 @@ export function PatientsPage() {
             <p className="text-sm text-muted-foreground">{p.phone}</p>
             {p.email && <p className="text-sm text-muted-foreground">{p.email}</p>}
             <div className="flex gap-2 pt-1">
-              <Button size="sm" variant="outline" className="flex-1" onClick={() => navigate(`/patients/${p.id}/edit`)}>
+              <Button size="sm" variant="outline" onClick={() => navigate(`/patients/${p.id}/edit`)}>
                 {t("common.edit")}
-              </Button>
-              <Button size="sm" variant="destructive" className="flex-1" onClick={() => handleDeactivate(p.id)}>
-                {t("patients.deactivate")}
               </Button>
             </div>
           </div>

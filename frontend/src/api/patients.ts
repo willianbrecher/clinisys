@@ -14,6 +14,3 @@ export const createPatient = (data: {
 export const updatePatient = (id: string, data: {
   fullName: string; dateOfBirth: string; phone: string; email?: string; notes?: string;
 }) => client.put(`/api/patients/${id}`, data);
-
-export const deactivatePatient = (id: string) =>
-  client.delete(`/api/patients/${id}`);
