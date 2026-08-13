@@ -25,8 +25,10 @@ public class UpdateAppointmentStatusCommandHandler : ICommandHandler<UpdateAppoi
 
         var valid = (appointment.Status, request.Status) switch
         {
+            var (from, to) when from == to                               => true, // no-op
             (AppointmentStatus.Scheduled,  AppointmentStatus.Confirmed)  => true,
             (AppointmentStatus.Scheduled,  AppointmentStatus.Cancelled)  => true,
+            (AppointmentStatus.Scheduled,  AppointmentStatus.Completed)  => true,
             (AppointmentStatus.Confirmed,  AppointmentStatus.Completed)  => true,
             (AppointmentStatus.Confirmed,  AppointmentStatus.Cancelled)  => true,
             (AppointmentStatus.Confirmed,  AppointmentStatus.NoShow)     => true,
