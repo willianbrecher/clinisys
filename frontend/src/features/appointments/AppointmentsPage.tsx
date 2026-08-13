@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useNavigate, useOutlet, Outlet } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import FullCalendar from "@fullcalendar/react";
+import type { EventSourceFuncArg, EventInput } from "@fullcalendar/core";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
@@ -53,6 +54,23 @@ export function AppointmentsPage() {
       startDate: start, endDate: end, pageSize: 200,
     }).then((r) => r.items).catch(() => [] as AppointmentModel[]);
   }, [role, doctorId]);
+
+  const handleCalendarEvents = useCallback(
+    (info: EventSourceFuncArg, successCb: (events: EventInput[]) => void) => {
+      loadCalendar(info.startStr, info.endStr).then((items) => {
+        successCb(items.map((a) => ({
+          id: a.id,
+          title: `${a.patientName} (${a.doctorName})`,
+          start: a.startsAt,
+          end: new Date(new Date(a.startsAt).getTime() + a.durationMinutes * 60000).toISOString(),
+          backgroundColor: STATUS_COLORS[a.status],
+          borderColor: STATUS_COLORS[a.status],
+          extendedProps: { appointment: a },
+        })));
+      });
+    },
+    [loadCalendar],
+  );
 
   useEffect(() => { if (tab === "list") loadList(); }, [tab, loadList]);
 
@@ -178,21 +196,10 @@ export function AppointmentsPage() {
               navigate("/appointments/new", { state: { defaultStartsAt: info.dateStr } })
             }
             eventClick={(info) => {
-              const appt = data.find((a) => a.id === info.event.id);
-              if (appt) openAppointment(appt);
+              const appt = info.event.extendedProps.appointment as AppointmentModel;
+              openAppointment(appt);
             }}
-            events={async (info, successCb) => {
-              const items = await loadCalendar(info.startStr, info.endStr);
-              setData(items);
-              successCb(items.map((a) => ({
-                id: a.id,
-                title: `${a.patientName} (${a.doctorName})`,
-                start: a.startsAt,
-                end: new Date(new Date(a.startsAt).getTime() + a.durationMinutes * 60000).toISOString(),
-                backgroundColor: STATUS_COLORS[a.status],
-                borderColor: STATUS_COLORS[a.status],
-              })));
-            }}
+            events={handleCalendarEvents}
             height="auto"
           />
         </div>
