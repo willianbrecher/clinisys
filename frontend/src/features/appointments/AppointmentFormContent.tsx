@@ -31,6 +31,7 @@ export function AppointmentFormContent() {
 
   const [patients, setPatients] = useState<PatientModel[]>([]);
   const [doctors, setDoctors] = useState<DoctorModel[]>([]);
+  const [optionsLoaded, setOptionsLoaded] = useState(false);
 
   const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<AppointmentFormData>({
     resolver: yupResolver(appointmentSchema) as unknown as Resolver<AppointmentFormData>,
@@ -42,11 +43,14 @@ export function AppointmentFormContent() {
   });
 
   useEffect(() => {
-    getPatients({ pageSize: 100 }).then((r) => setPatients(r.items)).catch(() => {});
-    getDoctors({ pageSize: 100 }).then((r) => setDoctors(r.items)).catch(() => {});
+    Promise.all([
+      getPatients({ pageSize: 100 }).then((r) => setPatients(r.items)).catch(() => {}),
+      getDoctors({ pageSize: 100 }).then((r) => setDoctors(r.items)).catch(() => {}),
+    ]).finally(() => setOptionsLoaded(true));
   }, []);
 
   useEffect(() => {
+    if (!optionsLoaded) return;
     if (appointment) {
       reset({
         patientId: appointment.patientId,
@@ -58,7 +62,7 @@ export function AppointmentFormContent() {
     } else {
       reset({ startsAt: defaultStartsAt?.slice(0, 16) ?? "", durationMinutes: 30 });
     }
-  }, [appointment, defaultStartsAt, reset]);
+  }, [optionsLoaded, appointment, defaultStartsAt, reset]);
 
   const onSubmit = async (data: AppointmentFormData) => {
     try {
