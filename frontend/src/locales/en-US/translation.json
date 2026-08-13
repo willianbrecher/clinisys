@@ -48,9 +48,7 @@
     "dateOfBirth": "Date of Birth",
     "phone": "Phone",
     "email": "Email",
-    "notes": "Notes",
-    "deactivate": "Deactivate Patient",
-    "deactivateConfirm": "Are you sure you want to deactivate this patient?"
+    "notes": "Notes"
   },
   "doctors": {
     "title": "Doctors",

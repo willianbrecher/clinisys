@@ -48,9 +48,7 @@
     "dateOfBirth": "Fecha de Nacimiento",
     "phone": "Teléfono",
     "email": "Correo electrónico",
-    "notes": "Notas",
-    "deactivate": "Desactivar Paciente",
-    "deactivateConfirm": "¿Está seguro de que desea desactivar este paciente?"
+    "notes": "Notas"
   },
   "doctors": {
     "title": "Médicos",
