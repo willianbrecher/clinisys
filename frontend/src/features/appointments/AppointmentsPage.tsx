@@ -93,6 +93,19 @@ export function AppointmentsPage() {
   const slotMinTime = settings ? settings.openTime : "08:00:00";
   const slotMaxTime = settings ? settings.closeTime : "18:00:00";
 
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const now = new Date();
+  const todayStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+
+  const isPastClick = (date: Date, allDay: boolean) => {
+    if (allDay) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      return date < today;
+    }
+    return date < new Date();
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between flex-wrap gap-2">
@@ -187,14 +200,16 @@ export function AppointmentsPage() {
               center: "title",
               right: "dayGridMonth,timeGridWeek,timeGridDay",
             }}
+            validRange={{ start: todayStr }}
             slotMinTime={slotMinTime}
             slotMaxTime={slotMaxTime}
             hiddenDays={[0, 1, 2, 3, 4, 5, 6].filter((d) => !openDays.includes(d))}
             selectable
             selectConstraint={{ daysOfWeek: openDays, startTime: slotMinTime, endTime: slotMaxTime }}
-            dateClick={(info: { dateStr: string }) =>
-              navigate("/appointments/new", { state: { defaultStartsAt: info.dateStr } })
-            }
+            dateClick={(info: { dateStr: string; date: Date; allDay: boolean }) => {
+              if (isPastClick(info.date, info.allDay)) return;
+              navigate("/appointments/new", { state: { defaultStartsAt: info.dateStr } });
+            }}
             eventClick={(info) => {
               const appt = info.event.extendedProps.appointment as AppointmentModel;
               openAppointment(appt);
