@@ -6,6 +6,8 @@ import type { EventSourceFuncArg, EventInput } from "@fullcalendar/core";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
+import esLocale from "@fullcalendar/core/locales/es";
+import ptBrLocale from "@fullcalendar/core/locales/pt-br";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Plus, List, CalendarDays } from "lucide-react";
@@ -27,7 +29,7 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 export function AppointmentsPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const outlet = useOutlet();
   const { role, doctorId } = useAuth();
@@ -89,6 +91,9 @@ export function AppointmentsPage() {
 
   const openDays = deriveOpenDays(settings);
 
+  const FC_LOCALE_MAP: Record<string, string> = { "pt-BR": "pt-br", "es-ES": "es" };
+  const fcLocale = FC_LOCALE_MAP[i18n.language] ?? "en";
+
   const slotMinTime = settings ? settings.openTime : "08:00:00";
   const slotMaxTime = settings ? settings.closeTime : "18:00:00";
 
@@ -140,7 +145,7 @@ export function AppointmentsPage() {
                   <TableRow key={a.id}>
                     <TableCell>{a.patientName}</TableCell>
                     <TableCell>{a.doctorName}</TableCell>
-                    <TableCell>{new Intl.DateTimeFormat(undefined, { dateStyle: "short", timeStyle: "short" }).format(new Date(a.startsAt))}</TableCell>
+                    <TableCell>{new Intl.DateTimeFormat(i18n.language, { dateStyle: "short", timeStyle: "short" }).format(new Date(a.startsAt))}</TableCell>
                     <TableCell>
                       <span className="px-2 py-0.5 rounded-full text-xs text-white" style={{ background: STATUS_COLORS[a.status] }}>
                         {a.status}
@@ -168,7 +173,7 @@ export function AppointmentsPage() {
                   <span className="px-2 py-0.5 rounded-full text-xs text-white" style={{ background: STATUS_COLORS[a.status] }}>{a.status}</span>
                 </div>
                 <p className="text-sm text-muted-foreground">{a.doctorName}</p>
-                <p className="text-sm">{new Intl.DateTimeFormat(undefined, { dateStyle: "short", timeStyle: "short" }).format(new Date(a.startsAt))}</p>
+                <p className="text-sm">{new Intl.DateTimeFormat(i18n.language, { dateStyle: "short", timeStyle: "short" }).format(new Date(a.startsAt))}</p>
                 <Button size="sm" variant="outline" className="w-full" onClick={() => openAppointment(a)}>
                   {role === "Doctor" ? t("common.view") : t("common.edit")}
                 </Button>
@@ -199,6 +204,8 @@ export function AppointmentsPage() {
               center: "title",
               right: "dayGridMonth,timeGridWeek,timeGridDay",
             }}
+            locales={[esLocale, ptBrLocale]}
+            locale={fcLocale}
             validRange={{ start: todayStr }}
             businessHours={{ daysOfWeek: openDays, startTime: slotMinTime, endTime: slotMaxTime }}
             slotMinTime={slotMinTime}
