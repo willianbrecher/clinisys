@@ -12,6 +12,7 @@ import { Plus, List, CalendarDays } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { getAppointments } from "@/api/appointments";
 import { getClinicSettings } from "@/api/clinicSettings";
+import { deriveOpenDays, isWithinOpenHours } from "./clinicHours";
 import type { AppointmentModel, ClinicSettingsModel } from "@/api/types";
 import { useAuth } from "@/auth/AuthContext";
 
@@ -86,9 +87,7 @@ export function AppointmentsPage() {
     else navigate(`/appointments/${a.id}/edit`, { state: { appointment: a } });
   };
 
-  const openDays = settings?.openDays
-    ? settings.openDays.split(",").map(Number)
-    : [1, 2, 3, 4, 5];
+  const openDays = deriveOpenDays(settings);
 
   const slotMinTime = settings ? settings.openTime : "08:00:00";
   const slotMaxTime = settings ? settings.closeTime : "18:00:00";
@@ -201,6 +200,7 @@ export function AppointmentsPage() {
               right: "dayGridMonth,timeGridWeek,timeGridDay",
             }}
             validRange={{ start: todayStr }}
+            businessHours={{ daysOfWeek: openDays, startTime: slotMinTime, endTime: slotMaxTime }}
             slotMinTime={slotMinTime}
             slotMaxTime={slotMaxTime}
             hiddenDays={[0, 1, 2, 3, 4, 5, 6].filter((d) => !openDays.includes(d))}
@@ -208,6 +208,11 @@ export function AppointmentsPage() {
             selectConstraint={{ daysOfWeek: openDays, startTime: slotMinTime, endTime: slotMaxTime }}
             dateClick={(info: { dateStr: string; date: Date; allDay: boolean }) => {
               if (isPastClick(info.date, info.allDay)) return;
+              if (info.allDay) {
+                if (!openDays.includes(info.date.getDay())) return;
+              } else if (!isWithinOpenHours(info.dateStr.slice(0, 16), 0, settings)) {
+                return;
+              }
               navigate("/appointments/new", { state: { defaultStartsAt: info.dateStr } });
             }}
             eventClick={(info) => {

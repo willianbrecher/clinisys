@@ -11,9 +11,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { getPatients } from "@/api/patients";
 import { getDoctors } from "@/api/doctors";
+import { getClinicSettings } from "@/api/clinicSettings";
 import { createAppointment, rescheduleAppointment, updateAppointmentStatus } from "@/api/appointments";
 import { buildAppointmentSchema, statusSchema, type AppointmentFormData, type StatusFormData } from "./appointment.schema";
-import type { AppointmentModel, PatientModel, DoctorModel, AppointmentStatus } from "@/api/types";
+import type { AppointmentModel, PatientModel, DoctorModel, AppointmentStatus, ClinicSettingsModel } from "@/api/types";
 import { useAuth } from "@/auth/AuthContext";
 import type { ModalContext } from "@/types/modal";
 import { getApiErrorMessage } from "@/lib/apiError";
@@ -33,16 +34,19 @@ export function AppointmentFormContent() {
   const [patients, setPatients] = useState<PatientModel[]>([]);
   const [doctors, setDoctors] = useState<DoctorModel[]>([]);
   const [optionsLoaded, setOptionsLoaded] = useState(false);
+  const [clinicSettings, setClinicSettings] = useState<ClinicSettingsModel | null>(null);
 
-  const appointmentSchema = useMemo(() => buildAppointmentSchema(), []);
+  const appointmentSchema = useMemo(() => buildAppointmentSchema(clinicSettings), [clinicSettings]);
 
-  const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<AppointmentFormData>({
+  const { register, handleSubmit, reset, watch, formState: { errors, isSubmitting } } = useForm<AppointmentFormData>({
     resolver: yupResolver(appointmentSchema) as unknown as Resolver<AppointmentFormData>,
   });
 
   const pad = (n: number) => String(n).padStart(2, "0");
   const now = new Date();
   const minStartsAt = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
+  const startsAtDate = watch("startsAt")?.slice(0, 10);
+  const maxStartsAt = startsAtDate && clinicSettings ? `${startsAtDate}T${clinicSettings.closeTime}` : undefined;
 
   const { register: registerStatus, handleSubmit: handleStatusSubmit, formState: { isSubmitting: isStatusSubmitting } } = useForm<StatusFormData>({
     resolver: yupResolver(statusSchema),
@@ -54,6 +58,10 @@ export function AppointmentFormContent() {
       getPatients({ pageSize: 100 }).then((r) => setPatients(r.items)).catch(() => {}),
       getDoctors({ pageSize: 100 }).then((r) => setDoctors(r.items)).catch(() => {}),
     ]).finally(() => setOptionsLoaded(true));
+  }, []);
+
+  useEffect(() => {
+    getClinicSettings().then(setClinicSettings).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -86,8 +94,8 @@ export function AppointmentFormContent() {
       }
       onSaved();
       onClose();
-    } catch {
-      toast.error("Failed to save appointment.");
+    } catch (err) {
+      toast.error(getApiErrorMessage(err, "Failed to save appointment."));
     }
   };
 
@@ -145,7 +153,7 @@ export function AppointmentFormContent() {
 
         <div className="flex flex-col gap-1.5">
           <Label>{t("appointments.startsAt")}</Label>
-          <Input type="datetime-local" min={minStartsAt} {...register("startsAt")} disabled={isDetail} readOnly={isDetail} />
+          <Input type="datetime-local" min={minStartsAt} max={maxStartsAt} {...register("startsAt")} disabled={isDetail} readOnly={isDetail} />
           {errors.startsAt && <p className="text-xs text-destructive">{errors.startsAt.message}</p>}
         </div>
 
