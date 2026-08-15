@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, useLocation, useOutletContext } from "react-router-dom";
 import { useForm, type Resolver } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -12,7 +12,7 @@ import { DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { getPatients } from "@/api/patients";
 import { getDoctors } from "@/api/doctors";
 import { createAppointment, rescheduleAppointment, updateAppointmentStatus } from "@/api/appointments";
-import { appointmentSchema, statusSchema, type AppointmentFormData, type StatusFormData } from "./appointment.schema";
+import { buildAppointmentSchema, statusSchema, type AppointmentFormData, type StatusFormData } from "./appointment.schema";
 import type { AppointmentModel, PatientModel, DoctorModel, AppointmentStatus } from "@/api/types";
 import { useAuth } from "@/auth/AuthContext";
 import type { ModalContext } from "@/types/modal";
@@ -34,9 +34,15 @@ export function AppointmentFormContent() {
   const [doctors, setDoctors] = useState<DoctorModel[]>([]);
   const [optionsLoaded, setOptionsLoaded] = useState(false);
 
+  const appointmentSchema = useMemo(() => buildAppointmentSchema(), []);
+
   const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<AppointmentFormData>({
     resolver: yupResolver(appointmentSchema) as unknown as Resolver<AppointmentFormData>,
   });
+
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const now = new Date();
+  const minStartsAt = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
 
   const { register: registerStatus, handleSubmit: handleStatusSubmit, formState: { isSubmitting: isStatusSubmitting } } = useForm<StatusFormData>({
     resolver: yupResolver(statusSchema),
@@ -139,7 +145,7 @@ export function AppointmentFormContent() {
 
         <div className="flex flex-col gap-1.5">
           <Label>{t("appointments.startsAt")}</Label>
-          <Input type="datetime-local" {...register("startsAt")} disabled={isDetail} readOnly={isDetail} />
+          <Input type="datetime-local" min={minStartsAt} {...register("startsAt")} disabled={isDetail} readOnly={isDetail} />
           {errors.startsAt && <p className="text-xs text-destructive">{errors.startsAt.message}</p>}
         </div>
 
