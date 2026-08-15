@@ -11,13 +11,13 @@ import { getClinicSettings, updateClinicSettings } from "@/api/clinicSettings";
 import { settingsSchema, type SettingsFormData } from "./settings.schema";
 
 const DAYS = [
-  { value: 1, label: "Monday" },
-  { value: 2, label: "Tuesday" },
-  { value: 3, label: "Wednesday" },
-  { value: 4, label: "Thursday" },
-  { value: 5, label: "Friday" },
-  { value: 6, label: "Saturday" },
-  { value: 0, label: "Sunday" },
+  { value: 1, labelKey: "settings.day_1" },
+  { value: 2, labelKey: "settings.day_2" },
+  { value: 3, labelKey: "settings.day_3" },
+  { value: 4, labelKey: "settings.day_4" },
+  { value: 5, labelKey: "settings.day_5" },
+  { value: 6, labelKey: "settings.day_6" },
+  { value: 0, labelKey: "settings.day_0" },
 ];
 
 const MAX_LOGO_BYTES = 512 * 1024;
@@ -123,7 +123,7 @@ export function SettingsPage() {
                   checked={openDays.includes(d.value)}
                   onCheckedChange={() => toggleDay(d.value)}
                 />
-                <label htmlFor={`day-${d.value}`} className="text-sm cursor-pointer">{d.label}</label>
+                <label htmlFor={`day-${d.value}`} className="text-sm cursor-pointer">{t(d.labelKey)}</label>
               </div>
             ))}
           </div>
