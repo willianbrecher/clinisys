@@ -2,6 +2,7 @@ using System.Security.Claims;
 using CliniSys.Api.Requests.Account;
 using CliniSys.Application.Commands.Account.UpdatePreferences;
 using CliniSys.Application.Commands.Account.UpdateProfilePicture;
+using CliniSys.Application.Queries.Account.GetCurrentUserPreferences;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -21,18 +22,24 @@ public class AccountController : ControllerBase
     private Guid CurrentUserId => Guid.Parse(
         User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub")!);
 
-    /// <summary>Returns the current user's profile info from their token claims.</summary>
+    /// <summary>Returns the current user's profile info — theme/language from the database (so a
+    /// preference change survives refresh without a fresh login), the rest from token claims.</summary>
+    /// <param name="ct">Cancellation token.</param>
     /// <returns>User identity payload.</returns>
     [HttpGet("me")]
-    public IActionResult Me() => Ok(new
+    public async Task<IActionResult> Me(CancellationToken ct)
     {
-        userId   = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue(Claims.Subject),
-        role     = User.FindFirstValue("role"),
-        fullName = User.FindFirstValue("fullName"),
-        theme    = User.FindFirstValue("theme"),
-        language = User.FindFirstValue("language"),
-        doctorId = User.FindFirstValue("doctorId"),
-    });
+        var prefs = await _mediator.Send(new GetCurrentUserPreferencesQuery(CurrentUserId), ct);
+        return Ok(new
+        {
+            userId   = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue(Claims.Subject),
+            role     = User.FindFirstValue("role"),
+            fullName = User.FindFirstValue("fullName"),
+            theme    = prefs?.Theme.ToString() ?? User.FindFirstValue("theme"),
+            language = prefs?.Language ?? User.FindFirstValue("language"),
+            doctorId = User.FindFirstValue("doctorId"),
+        });
+    }
 
     /// <summary>Sets or removes the authenticated user's profile picture.</summary>
     /// <param name="request">Base64 data URI or null.</param>
