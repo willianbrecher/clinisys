@@ -19,6 +19,16 @@ export interface PatientModel {
   email?: string;
   notes?: string;
   isActive: boolean;
+  healthPlanId?: string;
+  healthPlanName?: string;
+  healthPlanNumber?: string;
+}
+
+export interface HealthPlanModel {
+  id: string;
+  name: string;
+  notes?: string;
+  isActive: boolean;
 }
 
 export interface DoctorModel {

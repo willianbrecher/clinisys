@@ -23,6 +23,7 @@
     "dashboard": "Dashboard",
     "patients": "Patients",
     "doctors": "Doctors",
+    "healthPlans": "Health Plans",
     "appointments": "Appointments",
     "users": "Users",
     "settings": "Settings",
@@ -48,6 +49,14 @@
     "dateOfBirth": "Date of Birth",
     "phone": "Phone",
     "email": "Email",
+    "notes": "Notes",
+    "healthPlan": "Health Plan",
+    "healthPlanNumber": "Health Plan Number"
+  },
+  "healthPlans": {
+    "title": "Health Plans",
+    "new": "New Health Plan",
+    "name": "Name",
     "notes": "Notes"
   },
   "doctors": {

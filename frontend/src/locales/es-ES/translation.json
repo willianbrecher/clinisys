@@ -23,6 +23,7 @@
     "dashboard": "Panel",
     "patients": "Pacientes",
     "doctors": "Médicos",
+    "healthPlans": "Planes de Salud",
     "appointments": "Citas",
     "users": "Usuarios",
     "settings": "Configuración",
@@ -48,6 +49,14 @@
     "dateOfBirth": "Fecha de Nacimiento",
     "phone": "Teléfono",
     "email": "Correo electrónico",
+    "notes": "Notas",
+    "healthPlan": "Plan de Salud",
+    "healthPlanNumber": "Número del Plan de Salud"
+  },
+  "healthPlans": {
+    "title": "Planes de Salud",
+    "new": "Nuevo Plan de Salud",
+    "name": "Nombre",
     "notes": "Notas"
   },
   "doctors": {

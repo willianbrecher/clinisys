@@ -6,6 +6,8 @@ export const patientSchema = yup.object({
   phone: yup.string().required("Phone is required").max(30),
   email: yup.string().email("Invalid email").optional(),
   notes: yup.string().optional(),
+  healthPlanId: yup.string().transform((v) => (v === "" ? undefined : v)).uuid().optional(),
+  healthPlanNumber: yup.string().max(50).optional(),
 });
 
 export type PatientFormData = yup.InferType<typeof patientSchema>;
