@@ -18,10 +18,11 @@ public class GetPatientByIdQueryHandler : IQueryHandler<GetPatientByIdQuery, Pat
     /// <returns>The patient, or <see langword="null"/>.</returns>
     public async Task<PatientModel?> Handle(GetPatientByIdQuery request, CancellationToken cancellationToken)
     {
-        var patient = await _repo.GetByIdAsync(request.Id, cancellationToken);
+        var patient = await _repo.GetByIdWithHealthPlanAsync(request.Id, cancellationToken);
         return patient is null
             ? null
             : new PatientModel(patient.Id, patient.FullName, patient.DateOfBirth,
-                patient.Phone, patient.Email, patient.Notes, patient.IsActive);
+                patient.Phone, patient.Email, patient.Notes, patient.IsActive,
+                patient.HealthPlanId, patient.HealthPlan?.Name, patient.HealthPlanNumber);
     }
 }

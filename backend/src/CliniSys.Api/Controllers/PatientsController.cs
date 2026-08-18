@@ -50,7 +50,8 @@ public class PatientsController : ControllerBase
     public async Task<IActionResult> Create([FromBody] CreatePatientRequest request, CancellationToken ct)
     {
         var id = await _mediator.Send(new CreatePatientCommand(
-            request.FullName, request.DateOfBirth, request.Phone, request.Email, request.Notes), ct);
+            request.FullName, request.DateOfBirth, request.Phone, request.Email, request.Notes,
+            request.HealthPlanId, request.HealthPlanNumber), ct);
         return CreatedAtAction(nameof(GetById), new { id }, new { id });
     }
 
@@ -64,7 +65,8 @@ public class PatientsController : ControllerBase
         [FromRoute] Guid id, [FromBody] UpdatePatientRequest request, CancellationToken ct)
     {
         await _mediator.Send(new UpdatePatientCommand(
-            id, request.FullName, request.DateOfBirth, request.Phone, request.Email, request.Notes), ct);
+            id, request.FullName, request.DateOfBirth, request.Phone, request.Email, request.Notes,
+            request.HealthPlanId, request.HealthPlanNumber), ct);
         return NoContent();
     }
 

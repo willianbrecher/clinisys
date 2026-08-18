@@ -22,7 +22,8 @@ public class CreatePatientCommandHandler : ICommandHandler<CreatePatientCommand,
         {
             Id = Guid.NewGuid(), FullName = request.FullName,
             DateOfBirth = request.DateOfBirth, Phone = request.Phone,
-            Email = request.Email, Notes = request.Notes
+            Email = request.Email, Notes = request.Notes,
+            HealthPlanId = request.HealthPlanId, HealthPlanNumber = request.HealthPlanNumber
         };
         await _repo.AddAsync(patient, cancellationToken);
         await _repo.SaveChangesAsync(cancellationToken);
