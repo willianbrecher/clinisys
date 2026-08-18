@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useOutletContext } from "react-router-dom";
 import { useForm, type Resolver } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -10,7 +10,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { getPatientById, createPatient, updatePatient } from "@/api/patients";
+import { getHealthPlans } from "@/api/healthPlans";
 import { patientSchema, type PatientFormData } from "./patient.schema";
+import type { HealthPlanModel } from "@/api/types";
 import type { ModalContext } from "@/types/modal";
 
 export function PatientFormContent() {
@@ -19,15 +21,22 @@ export function PatientFormContent() {
   const { onClose, onSaved } = useOutletContext<ModalContext>();
   const isEdit = !!id;
 
+  const [healthPlans, setHealthPlans] = useState<HealthPlanModel[]>([]);
+
   const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<PatientFormData>({
     resolver: yupResolver(patientSchema) as unknown as Resolver<PatientFormData>,
   });
+
+  useEffect(() => {
+    getHealthPlans({ pageSize: 100 }).then((r) => setHealthPlans(r.items)).catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (id) {
       getPatientById(id).then((p) => reset({
         fullName: p.fullName, dateOfBirth: p.dateOfBirth,
         phone: p.phone, email: p.email ?? "", notes: p.notes ?? "",
+        healthPlanId: p.healthPlanId ?? "", healthPlanNumber: p.healthPlanNumber ?? "",
       })).catch(() => toast.error("Failed to load patient."));
     }
   }, [id, reset]);
@@ -77,6 +86,21 @@ export function PatientFormContent() {
           <Label>{t("patients.email")}</Label>
           <Input type="email" {...register("email")} />
           {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <Label>{t("patients.healthPlan")}</Label>
+          <select className="border rounded px-3 py-2 text-sm bg-background" {...register("healthPlanId")}>
+            <option value="">{t("common.select")}</option>
+            {healthPlans.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+          </select>
+          {errors.healthPlanId && <p className="text-xs text-destructive">{errors.healthPlanId.message}</p>}
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <Label>{t("patients.healthPlanNumber")}</Label>
+          <Input {...register("healthPlanNumber")} />
+          {errors.healthPlanNumber && <p className="text-xs text-destructive">{errors.healthPlanNumber.message}</p>}
         </div>
 
         <div className="flex flex-col gap-1.5 sm:col-span-2">

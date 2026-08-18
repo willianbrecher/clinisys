@@ -3,7 +3,7 @@ import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
   LayoutDashboard, Users, UserRound, CalendarDays,
-  Settings, User, LogOut, Menu, Shield, ChevronDown,
+  Settings, User, LogOut, Menu, Shield, ChevronDown, CreditCard,
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -38,6 +38,7 @@ function SidebarContent({ onNav }: { onNav?: () => void }) {
     { to: "/", icon: <LayoutDashboard className="h-4 w-4" />, label: t("nav.dashboard"), roles: ["Admin","Staff","Doctor"] },
     { to: "/patients", icon: <UserRound className="h-4 w-4" />, label: t("nav.patients"), roles: ["Admin","Staff"] },
     { to: "/doctors", icon: <Users className="h-4 w-4" />, label: t("nav.doctors"), roles: ["Admin","Staff"] },
+    { to: "/health-plans", icon: <CreditCard className="h-4 w-4" />, label: t("nav.healthPlans"), roles: ["Admin","Staff"] },
     { to: "/appointments", icon: <CalendarDays className="h-4 w-4" />, label: t("nav.appointments"), roles: ["Admin","Staff","Doctor"] },
   ];
 
