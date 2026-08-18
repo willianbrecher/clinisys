@@ -22,16 +22,19 @@ export function PatientFormContent() {
   const isEdit = !!id;
 
   const [healthPlans, setHealthPlans] = useState<HealthPlanModel[]>([]);
+  const [optionsLoaded, setOptionsLoaded] = useState(false);
 
   const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<PatientFormData>({
     resolver: yupResolver(patientSchema) as unknown as Resolver<PatientFormData>,
   });
 
   useEffect(() => {
-    getHealthPlans({ pageSize: 100 }).then((r) => setHealthPlans(r.items)).catch(() => {});
+    getHealthPlans({ pageSize: 100 }).then((r) => setHealthPlans(r.items)).catch(() => {})
+      .finally(() => setOptionsLoaded(true));
   }, []);
 
   useEffect(() => {
+    if (!optionsLoaded) return;
     if (id) {
       getPatientById(id).then((p) => reset({
         fullName: p.fullName, dateOfBirth: p.dateOfBirth,
@@ -39,7 +42,7 @@ export function PatientFormContent() {
         healthPlanId: p.healthPlanId ?? "", healthPlanNumber: p.healthPlanNumber ?? "",
       })).catch(() => toast.error("Failed to load patient."));
     }
-  }, [id, reset]);
+  }, [optionsLoaded, id, reset]);
 
   const onSubmit = async (data: PatientFormData) => {
     try {
