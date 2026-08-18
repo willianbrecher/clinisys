@@ -8,5 +8,8 @@ namespace CliniSys.Application.Commands.Patients.CreatePatient;
 /// <param name="Phone">Contact phone.</param>
 /// <param name="Email">Optional email.</param>
 /// <param name="Notes">Optional notes.</param>
+/// <param name="HealthPlanId">Optional linked health plan.</param>
+/// <param name="HealthPlanNumber">Optional membership/card number under the linked plan.</param>
 public record CreatePatientCommand(string FullName, DateOnly DateOfBirth,
-    string Phone, string? Email, string? Notes) : ICommand<Guid>;
+    string Phone, string? Email, string? Notes,
+    Guid? HealthPlanId, string? HealthPlanNumber) : ICommand<Guid>;

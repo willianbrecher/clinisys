@@ -26,6 +26,8 @@ public class UpdatePatientCommandHandler : ICommandHandler<UpdatePatientCommand,
         patient.Phone       = request.Phone;
         patient.Email       = request.Email;
         patient.Notes       = request.Notes;
+        patient.HealthPlanId     = request.HealthPlanId;
+        patient.HealthPlanNumber = request.HealthPlanNumber;
         _repo.Update(patient);
         await _repo.SaveChangesAsync(cancellationToken);
         return Unit.Value;

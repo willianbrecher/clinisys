@@ -14,6 +14,7 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<Guid
     public DbSet<Patient> Patients => Set<Patient>();
     public DbSet<Appointment> Appointments => Set<Appointment>();
     public DbSet<ClinicSettings> ClinicSettings => Set<ClinicSettings>();
+    public DbSet<HealthPlan> HealthPlans => Set<HealthPlan>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -28,7 +29,14 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<Guid
              .OnDelete(DeleteBehavior.Cascade);
         });
 
-        builder.Entity<Patient>(e => e.HasKey(p => p.Id));
+        builder.Entity<HealthPlan>(e => e.HasKey(hp => hp.Id));
+
+        builder.Entity<Patient>(e =>
+        {
+            e.HasKey(p => p.Id);
+            e.HasOne(p => p.HealthPlan).WithMany()
+             .HasForeignKey(p => p.HealthPlanId).OnDelete(DeleteBehavior.Restrict);
+        });
 
         builder.Entity<Appointment>(e =>
         {

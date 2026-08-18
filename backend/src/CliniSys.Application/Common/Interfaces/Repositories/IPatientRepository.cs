@@ -12,4 +12,9 @@ public interface IPatientRepository : IRepository<Patient>
     /// <param name="pageSize">Items per page.</param>
     /// <param name="ct">Cancellation token.</param>
     Task<PagedResult<Patient>> GetPagedAsync(string? search, int page, int pageSize, CancellationToken ct = default);
+
+    /// <summary>Finds a patient by ID, including the HealthPlan navigation. Returns <see langword="null"/> if none.</summary>
+    /// <param name="id">Patient identifier.</param>
+    /// <param name="ct">Cancellation token.</param>
+    Task<Patient?> GetByIdWithHealthPlanAsync(Guid id, CancellationToken ct = default);
 }

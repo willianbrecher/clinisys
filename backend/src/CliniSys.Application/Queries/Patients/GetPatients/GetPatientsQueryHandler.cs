@@ -13,8 +13,12 @@ namespace CliniSys.Application.Queries.Patients.GetPatients;
 /// <param name="Email">Optional email.</param>
 /// <param name="Notes">Optional notes.</param>
 /// <param name="IsActive">Active status.</param>
+/// <param name="HealthPlanId">Optional linked health plan identifier.</param>
+/// <param name="HealthPlanName">Optional linked health plan name.</param>
+/// <param name="HealthPlanNumber">Optional membership/card number under the linked plan.</param>
 public record PatientModel(Guid Id, string FullName, DateOnly DateOfBirth,
-    string Phone, string? Email, string? Notes, bool IsActive);
+    string Phone, string? Email, string? Notes, bool IsActive,
+    Guid? HealthPlanId, string? HealthPlanName, string? HealthPlanNumber);
 
 /// <summary>Handler for <see cref="GetPatientsQuery"/>.</summary>
 public class GetPatientsQueryHandler : IQueryHandler<GetPatientsQuery, PagedResult<PatientModel>>
@@ -35,7 +39,8 @@ public class GetPatientsQueryHandler : IQueryHandler<GetPatientsQuery, PagedResu
 
         var paged = await _repo.GetPagedAsync(request.Search, request.Page, request.PageSize, cancellationToken);
         var items = paged.Items.Select(p =>
-            new PatientModel(p.Id, p.FullName, p.DateOfBirth, p.Phone, p.Email, p.Notes, p.IsActive)).ToList();
+            new PatientModel(p.Id, p.FullName, p.DateOfBirth, p.Phone, p.Email, p.Notes, p.IsActive,
+                p.HealthPlanId, p.HealthPlan?.Name, p.HealthPlanNumber)).ToList();
         return new PagedResult<PatientModel>(items, paged.Page, paged.PageSize, paged.TotalCount, paged.TotalPages);
     }
 }

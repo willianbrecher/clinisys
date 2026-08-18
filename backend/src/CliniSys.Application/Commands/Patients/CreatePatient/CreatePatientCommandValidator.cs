@@ -12,5 +12,6 @@ public class CreatePatientCommandValidator : AbstractValidator<CreatePatientComm
         RuleFor(x => x.DateOfBirth).NotEmpty().LessThan(DateOnly.FromDateTime(DateTime.UtcNow));
         RuleFor(x => x.Phone).NotEmpty().MaximumLength(30);
         RuleFor(x => x.Email).EmailAddress().When(x => x.Email is not null);
+        RuleFor(x => x.HealthPlanNumber).MaximumLength(50);
     }
 }

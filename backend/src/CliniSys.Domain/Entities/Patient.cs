@@ -15,6 +15,12 @@ public class Patient
     public string? Email { get; set; }
     /// <summary>Optional notes (insurance, medical, etc.).</summary>
     public string? Notes { get; set; }
+    /// <summary>Optional linked health plan.</summary>
+    public Guid? HealthPlanId { get; set; }
+    /// <summary>Navigation to the linked health plan.</summary>
+    public HealthPlan? HealthPlan { get; set; }
+    /// <summary>Optional patient's own membership/card number under the linked plan.</summary>
+    public string? HealthPlanNumber { get; set; }
     /// <summary>False when soft-deleted.</summary>
     public bool IsActive { get; set; } = true;
 }
