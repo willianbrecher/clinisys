@@ -28,6 +28,16 @@ const STATUS_COLORS: Record<string, string> = {
   NoShow: "#f59e0b",
 };
 
+// The backend stores/compares appointment times as naive wall-clock values (matching the
+// datetime-local inputs used to create them), so calendar range queries must use the same
+// naive shape — a UTC-offset-qualified string here would get converted against the server's
+// timezone instead, shifting which appointments fall inside the queried range.
+function toNaiveLocalIso(date: Date): string {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T`
+    + `${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+}
+
 export function AppointmentsPage() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
@@ -60,7 +70,7 @@ export function AppointmentsPage() {
 
   const handleCalendarEvents = useCallback(
     (info: EventSourceFuncArg, successCb: (events: EventInput[]) => void) => {
-      loadCalendar(info.startStr, info.endStr).then((items) => {
+      loadCalendar(toNaiveLocalIso(info.start), toNaiveLocalIso(info.end)).then((items) => {
         successCb(items.map((a) => ({
           id: a.id,
           title: `${a.patientName} (${a.doctorName})`,
