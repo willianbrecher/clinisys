@@ -29,6 +29,7 @@ services:
       ASPNETCORE_ENVIRONMENT: Production
       ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}"
       Auth__DisableTransportSecurity: ${AUTH_DISABLE_TRANSPORT_SECURITY:-false}
+      Cors__AllowedOrigins: ${CORS_ALLOWED_ORIGINS:-http://localhost:5173}
     ports:
       - "8080:5000"
     networks:
