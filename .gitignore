@@ -17,6 +17,9 @@ frontend/.vite/
 # Docker volumes
 postgres-data/
 
+# Logs
+backend/src/CliniSys.Api/logs/
+
 # OS
 .DS_Store
 Thumbs.db
