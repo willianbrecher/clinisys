@@ -10,9 +10,10 @@ An open-source clinic management system for small to medium medical practices. C
 
 CliniSys gives a clinic everything it needs to manage its day-to-day operations:
 
-- **Patient records** — register patients with personal details, date of birth, contact info, and notes
+- **Patient records** — register patients with personal details, date of birth, contact info, notes, and a linked health plan
+- **Health plans** — maintain a shared catalog of health/insurance plans and link each patient to one, with their membership number
 - **Doctor profiles** — link doctor accounts to their specialty and manage their availability
-- **Appointment scheduling** — book, reschedule, cancel, and track appointments on a day/week/month calendar view
+- **Appointment scheduling** — book, reschedule, cancel, and track appointments on a day/week/month calendar view, with guardrails against past dates and out-of-hours slots
 - **User management** — create Staff and Doctor accounts, reset passwords, and deactivate users
 - **Clinic settings** — configure working hours, open days, and clinic logo
 - **Account settings** — each user can set their own profile picture, display language, and color theme
@@ -23,8 +24,8 @@ The system has three roles:
 
 | Role | Access |
 |---|---|
-| **Admin** | Full access — manages users, clinic settings, patients, doctors, and appointments |
-| **Staff** | Manages patients and appointments |
+| **Admin** | Full access — manages users, clinic settings, patients, doctors, health plans, and appointments |
+| **Staff** | Manages patients, health plans, and appointments |
 | **Doctor** | Views their own appointment calendar |
 
 Patients are records only — they do not have login accounts.
@@ -39,6 +40,7 @@ Patients are records only — they do not have login accounts.
 - Entity Framework Core 8 + PostgreSQL 16
 - OpenIddict 5 — OAuth 2.0 password flow, JWT tokens
 - ASP.NET Core Identity
+- Serilog — structured logging to console and a rolling file
 
 **Frontend**
 - React 18 + TypeScript, Vite
@@ -83,6 +85,12 @@ docker compose down
 # Also remove the database volume (deletes all data):
 docker compose down -v
 ```
+
+### Logs
+
+The API logs to the container's stdout (`docker compose logs -f api`) and to a rolling daily
+file kept in the `api-logs` volume — mounted at `/app/logs`, 14 files retained. Override the
+path with `LOG_FILE_PATH`.
 
 ---
 
@@ -134,6 +142,8 @@ Copy `.env.example` to `.env` and adjust as needed:
 | `POSTGRES_PASSWORD` | Database password | `changeme` |
 | `POSTGRES_DB` | Database name | `clinisys` |
 | `AUTH_DISABLE_TRANSPORT_SECURITY` | Set `true` behind an HTTP-only reverse proxy | `false` |
+| `CORS_ALLOWED_ORIGINS` | Comma-separated list of origins allowed to call the API (e.g. the deployed frontend URL) | `http://localhost:5173` |
+| `LOG_FILE_PATH` | Path inside the container for the rolling API log file; the date is inserted before `.log` | `/app/logs/clinisys-.log` |
 | `VITE_BACKEND_URL` | Backend URL for the Vite dev proxy | `http://localhost:5110` |
 
 ---
@@ -155,6 +165,7 @@ clinisys/
         ├── features/                 # One folder per page/feature
         │   ├── appointments/
         │   ├── patients/
+        │   ├── healthPlans/
         │   ├── doctors/
         │   ├── users/
         │   ├── settings/
