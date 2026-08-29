@@ -30,8 +30,11 @@ services:
       ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}"
       Auth__DisableTransportSecurity: ${AUTH_DISABLE_TRANSPORT_SECURITY:-false}
       Cors__AllowedOrigins: ${CORS_ALLOWED_ORIGINS:-http://localhost:5173}
+      Serilog__WriteTo__file__Args__path: ${LOG_FILE_PATH:-/app/logs/clinisys-.log}
     ports:
       - "8080:5000"
+    volumes:
+      - api-logs:/app/logs
     networks:
       - clinisys
 
@@ -49,6 +52,7 @@ services:
 
 volumes:
   postgres-data:
+  api-logs:
 
 networks:
   clinisys:
