@@ -263,3 +263,15 @@ labels (`healthPlan`, `healthPlanNumber` — the select's label and the free-tex
 - No `HealthPlanId` existence validation in the command validator — matches `Appointment`'s
   `PatientId`/`DoctorId` precedent (§2).
 - No search/filter by health plan on the patients list — out of scope for this pass.
+
+## 5. Follow-up (post-merge)
+
+**PR [#50](https://github.com/willianbrecher/clinisys/pull/50) — health plan dropdown blank on
+patient edit.** After §3.4 shipped, opening an existing patient for edit could show the health
+plan `<select>` as blank even when the patient had a plan: the form's `reset()` effect ran
+before `getHealthPlans()` resolved, so React Hook Form set `healthPlanId` to a value with no
+matching `<option>` yet. Fixed in `PatientFormContent.tsx` by gating the `reset()` effect on an
+`optionsLoaded` flag set in the `getHealthPlans().finally()` — the same "load dropdown options
+before resetting the form" fix already applied to `AppointmentFormContent` in the
+[appointment status / edit dropdowns](2026-08-13-appointment-status-and-edit-dropdowns.md) work
+(#33).
