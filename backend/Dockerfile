@@ -21,8 +21,9 @@ WORKDIR /app
 RUN apk add --no-cache icu-libs
 ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false
 
-# Non-root user for security
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+# Non-root user for security; /app/logs must be owned by it so the Serilog file sink can write
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup \
+ && mkdir -p /app/logs && chown appuser:appgroup /app/logs
 USER appuser
 
 COPY --from=build /app/publish .
