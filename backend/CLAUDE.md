@@ -24,10 +24,34 @@ Run from `backend/`:
 
 ```bash
 dotnet build                # build the solution
+dotnet test                 # run the unit tests
 ```
 
-There is no backend test project in this repo yet — don't assume `dotnet test` works until one is
-added.
+## Tests
+
+`test/CliniSys.Application.Tests` (NUnit 4) — the only test project. It covers the
+`CliniSys.Application` layer: FluentValidation validators, MediatR command/query handlers, and
+`ValidationBehaviour`. Handler dependencies (repository interfaces, `IIdentityService`) are
+substituted with NSubstitute — **no database, no `WebApplicationFactory`**. Infrastructure
+repositories and EF Core queries are not exercised.
+
+Conventions:
+
+- **Folders group by aggregate** (`Appointments/`, `Patients/`, …), one level deep — they do
+  *not* mirror the production `Commands/<Verb>/` nesting. Namespaces follow the folder
+  (`CliniSys.Application.Tests.Appointments`).
+- One `[TestFixture]` per class under test, file named `<ClassUnderTest>Tests.cs`.
+- Test methods named `Method_Scenario_ExpectedResult` (or a plain descriptive name for
+  validators); Arrange/Act/Assert.
+- Asserts via **FluentAssertions** (`result.Should().Be(...)`,
+  `await act.Should().ThrowAsync<ConflictException>()`); validators use
+  `FluentValidation.TestHelper` (`validator.TestValidate(cmd).ShouldHaveValidationErrorFor(...)`).
+- Substitutes: `Substitute.For<IAppointmentRepository>()`, stub reads with `.Returns(...)`,
+  assert writes with `.Received(1)` / `.DidNotReceive()`.
+- `TestSupport/Builders.cs` — valid-by-default command/entity factories; each test overrides only
+  the field it exercises.
+- Package versions are pinned deliberately (see `CliniSys.Application.Tests.csproj`):
+  FluentAssertions `< 8.0` (v8 is paid-license), NSubstitute over Moq (no build-time telemetry).
 
 EF Core migrations live in `CliniSys.Infrastructure/Persistence/Migrations`. Add new ones from
 `backend/src/CliniSys.Infrastructure`:

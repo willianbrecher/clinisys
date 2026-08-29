@@ -1,7 +1,8 @@
 # .NET
-backend/src/**/bin/
-backend/src/**/obj/
-backend/src/**/*.user
+backend/**/bin/
+backend/**/obj/
+backend/**/*.user
+backend/**/TestResults/
 *.suo
 .vs/
 
